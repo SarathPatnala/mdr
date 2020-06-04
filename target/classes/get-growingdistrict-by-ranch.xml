@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-growerdistrict-by-ranch-Flow" doc:id="b9c6b706-dc60-41a1-9df2-f3c5b2b3fb0e" >
+		<min-log:log doc:name="Start Logger" doc:id="e07d1f06-d522-45ee-a610-e0c19156a44f" msg="Start: Flow to get grower district by ranch" transactionProperties="#[vars.transactionProperties]"/>
+		<set-variable value="#[attributes.uriParams.ranchnbr]" doc:name="Set Variable" doc:id="b384d7eb-127b-45d1-983b-5ad9d5513515" variableName="ranchNbr"/>
+		<db:select doc:name="Select Query to get all plant items as list" doc:id="5266821f-8345-4dc4-9bd7-f00b3610219a" config-ref="MySQL_Config">
+			<db:sql >#[&quot;SELECT mpr.ProducingAreaName,mpr.ProducingAreaCode, mpr.GrowingDistrictCode, mpr.IsActive FROM MDR.M_ProducingArea mpr  left join MDR.M_Ranch mr
+   on  mpr.ProducingAreaCode = mr.ProducingAreaCode where mr.RanchNbr ='&quot; ++ attributes.uriParams.ranchnbr ++ &quot;'&quot;]
+ </db:sql>
+		</db:select>
+		
+		<choice doc:name="Choice" doc:id="7b3ec46d-10e6-4522-a9df-8ad1cf0116b4">
+					<when expression="#[sizeOf(payload) &gt; 0]">
+						<ee:transform doc:name="Transform Message" doc:id="f6caf074-744d-4ac2-9fa3-4963ea705c53">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Transform Message" doc:id="2e270584-4d2a-4cfb-b017-10a9dd9404c9">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"RecordNotFound - Cannot find item details for for the entered item number" ++ vars.ranchNbr]]></ee:set-payload>
+							</ee:message>
+							<ee:variables>
+								<ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/json
+---
+404]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</otherwise>
+				</choice>
+		<min-log:log doc:name="End Logger" doc:id="70b6a612-152e-408f-979e-9d76b9b84ce2" msg="End: Flow to get grower district by ranch" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

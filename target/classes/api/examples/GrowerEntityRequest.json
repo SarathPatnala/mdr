@@ -1,0 +1,16 @@
+{  
+   "GrowerEntityId":0,
+   "GrowerEntity":"AD TEST ENTITYEE",
+   "VendorInvoiceAccNum":"NONE",
+   "GrowingDistrictCode":"BAJA",
+   "Commodity":"RASP",
+   "Warehouse":"0001",
+   "FieldType":"TRANSITIONAL",
+   "Status":true,
+   "ChangeInfo":{  
+      "CreatedBy":"annadurai.sellamuthu",
+      "CreatedDateTime":"2018-09-05T14:25:13.1870979-07:00",
+      "LastChangedBy":"annadurai.sellamuthu",
+      "LastChangedDateTime":"2018-09-05T14:25:13.1870979-07:00"
+   }
+}

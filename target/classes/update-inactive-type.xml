@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="update-inactive-typeFlow" doc:id="d7b42b91-0057-47e3-9576-459c2ded0015" >
+		<min-log:put doc:name="TransactionProperties" doc:id="bc15c658-ed04-4f82-bb58-8666a203393e" key="Inactivetype" value="#[payload.enAttributeType]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Logger" doc:id="e9169b33-2adc-4645-84a3-4418387e9002" msg="Start: Flow to mark status as inactive" transactionProperties="#[vars.transactionProperties]"/>
+		<db:update doc:name="Update Query to mark status as Inactive" doc:id="43a4dee4-a889-4523-9370-e4ae7bdeeacb" config-ref="mdr_database_config">
+			<db:sql >UPDATE  [MDR].[dbo].[PlantItemLookup]
+SET LastChangedDate=GETDATE( ), LastChangedBy= :LastChangedBy, Status=:Status 
+WHERE Attribute=:enAttributeType and AttributeValue=:value</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"enAttributeType" : payload.enAttributeType,
+	"value" : payload.value,
+	"LastChangedBy": payload.LastChangedBy,				
+	"Status" : payload.Status
+}]]]></db:input-parameters>
+		</db:update>
+		<set-variable value="204" doc:name="httpStatus" doc:id="00b3551b-92dc-4eed-b6ec-71942c0de47b" variableName="httpStatus"/>
+		<min-log:log doc:name="End Logger" doc:id="3db16de5-44af-48f8-bf50-60278143fb1e" msg="End: Flow to mark status as inactive" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

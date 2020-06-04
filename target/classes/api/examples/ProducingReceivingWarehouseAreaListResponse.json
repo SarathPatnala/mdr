@@ -1,0 +1,27 @@
+{
+  "Totalresults": 3,
+  "Data": [
+    {
+      "M_WarehouseReceivingArea_WarehouseNbr": "0001",
+      "M_ProducingArea_ProducingAreaCode": "0001",
+      "M_ReceivingArea_ReceivingAreaName": "Watsonville",
+      "M_ReceivingArea_ReceivingAreaCode": "WAT",
+      "M_ProducingArea_ProducingAreaName": "Watsonville"
+    },
+    {
+      "M_WarehouseReceivingArea_WarehouseNbr": "0006",
+      "M_ProducingArea_ProducingAreaCode": "0001",
+      "M_ReceivingArea_ReceivingAreaName": "Watsonville",
+      "M_ReceivingArea_ReceivingAreaCode": "WAT",
+      "M_ProducingArea_ProducingAreaName": "Watsonville"
+    },
+    {
+      "M_WarehouseReceivingArea_WarehouseNbr": "0006",
+      "M_ProducingArea_ProducingAreaCode": "0002",
+      "M_ReceivingArea_ReceivingAreaName": "Watsonville",
+      "M_ReceivingArea_ReceivingAreaCode": "WAT",
+      "M_ProducingArea_ProducingAreaName": "Salinas"
+    }
+  ],
+  "Status": "Ok"
+}

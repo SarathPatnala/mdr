@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="post-plant-item-attributesFlow" doc:id="a40857af-47c3-47d0-a63a-fbea61f1e344" >
+		<min-log:log doc:name="Log" doc:id="f8f6d840-1c1d-4cd3-9ff5-89c6075709a0" msg='"Start: Flow to get list of plant items attributes"' transactionProperties="#[vars.transactionProperties]"/>
+		<logger level="INFO" doc:name="start:Logger" doc:id="ddc46d7f-4a13-442f-b86d-d6e5cada8a4b" message="Start: Flow to get list of items for : #[payload]" />
+		<ee:transform doc:name="Create Query" doc:id="d9244e85-dcd1-4403-a3e2-bbf7ee856528">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="itemAttributesQuery" ><![CDATA[%dw 2.0
+output text/plain
+---
+"SELECT ItemNbr
+      ,BerryTypeCode
+      ,PlantType
+      ,VarietyCode
+      ,Variety
+      ,FieldType
+      ,InventoryType
+  FROM [MDR].[dbo].[AllItemPlantAttribute]
+  WHERE ItemNbr IN " ++
+(if (sizeOf(payload.ItemIds) > 0)( "(" ++  ( payload.ItemIds reduce ((item, acc = "") -> acc ++ "'" ++ item ++ "',") splitBy "," joinBy "," as String) ++ ") ") else " ('') ")]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Fetch list of plant items attributes" doc:id="34348540-91ea-41b5-a632-b911f7e21495" config-ref="mdr_database_config">
+			<db:sql >#[vars.itemAttributesQuery]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2966b721-5f90-4f19-9b16-ebb01fb9d651" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload) default 0,
+	"Data": payload map {
+		"ItemNbr": $.ItemNbr,
+		"BerryTypeCode": $.BerryTypeCode,
+		"PlantType": $.PlantType,
+		"VarietyCode": $.VarietyCode,
+		"Variety": $.Variety,
+		"FieldType": $.FieldType,
+		"InventoryType": $.InventoryType
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end:Log" doc:id="3a50bb3f-acc5-4eb1-b3a8-3b2dc1407c69" msg='"End: Flow to get list of plant items attributes"' transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

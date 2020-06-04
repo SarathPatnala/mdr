@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration status="warn" name="newrelic-cloudhub"
+    packages="com.mulesoft.ch.logging.appender">
+    <Properties>
+        <Property name="target.env">${sys:mule.env}</Property>
+        <Property name="target.app">${businessGroupShort}-${project.artifactId}-${sys:mule.env}</Property>
+        <Property name="newrelic.host">${sys:mule.newrelic.host}</Property>
+        <Property name="newrelic.url">${sys:mule.newrelic.url}</Property>
+        <Property name="newrelic.token">${sys:mule.newrelic.token}</Property>
+
+    </Properties>
+    <Appenders>
+        <RollingFile name="file"
+            fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}${project.artifactId}.log"
+            filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}${project.artifactId}%i.log">
+            <PatternLayout pattern="%d [%t] %-5p %c - %m%n" />
+            <SizeBasedTriggeringPolicy size="10 MB" />
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
+        <Log4J2CloudhubLogAppender name="CLOUDHUB"
+
+            addressProvider="com.mulesoft.ch.logging.DefaultAggregatorAddressProvider"
+            applicationContext="com.mulesoft.ch.logging.DefaultApplicationContext"
+            appendRetryIntervalMs="${sys:logging.appendRetryInterval}"
+            appendMaxAttempts="${sys:logging.appendMaxAttempts}"
+            batchSendIntervalMs="${sys:logging.batchSendInterval}"
+            batchMaxRecords="${sys:logging.batchMaxRecords}"
+            memBufferMaxSize="${sys:logging.memBufferMaxSize}"
+            journalMaxWriteBatchSize="${sys:logging.journalMaxBatchSize}"
+            journalMaxFileSize="${sys:logging.journalMaxFileSize}"
+            clientMaxPacketSize="${sys:logging.clientMaxPacketSize}"
+            clientConnectTimeoutMs="${sys:logging.clientConnectTimeout}"
+            clientSocketTimeoutMs="${sys:logging.clientSocketTimeout}"
+            serverAddressPollIntervalMs="${sys:logging.serverAddressPollInterval}"
+            serverHeartbeatSendIntervalMs="${sys:logging.serverHeartbeatSendIntervalMs}"
+            statisticsPrintIntervalMs="${sys:logging.statisticsPrintIntervalMs}">
+            <PatternLayout
+                pattern="[%d{MM-dd HH:mm:ss}] %-5p %c{1} [%t]: %m%n" />
+        </Log4J2CloudhubLogAppender>
+
+        <Http name="NewRelicAppender"
+            url="https://${newrelic.host}${newrelic.url}" method="POST"
+            verifyHostname="false">
+            <JsonLayout properties="true">
+                <KeyValuePair key="ApplicationName" value="${target.app}" />
+                <KeyValuePair key="Environment" value="${target.env}" />
+            </JsonLayout>
+            <Property name="Content-Type" value="application/json" />
+            <Property name="X-License-Key" value="${newrelic.token}" />
+    
+        </Http>
+
+    </Appenders>
+    <Loggers>
+        <!-- Http Logger shows wire traffic on DEBUG. -->
+<!--        <AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger"  level="DEBUG" /> -->
+        <AsyncLogger name="org.mule.service.http" level="WARN" />
+        <AsyncLogger name="org.mule.extension.http" level="WARN" />
+
+        <AsyncLogger name="org.mule" level="INFO" />
+        <AsyncLogger name="com.mulesoft" level="INFO" />
+        <AsyncLogger name="applicationDebug" level="OFF" />
+        <AsyncLogger name="applicationInfo" level="INFO" />
+
+        <AsyncLogger name="org.apache.cxf" level="INFO" />
+        <AsyncLogger name="com.ning" level="INFO" />
+        <AsyncLogger name="org.glassfish.grizzly" level="INFO" />
+
+        <AsyncRoot level="INFO">
+
+            <AppenderRef ref="file" />
+            <AppenderRef ref="CLOUDHUB" />
+            <AppenderRef ref="NewRelicAppender" />
+
+        </AsyncRoot>
+        
+    </Loggers>
+</Configuration>

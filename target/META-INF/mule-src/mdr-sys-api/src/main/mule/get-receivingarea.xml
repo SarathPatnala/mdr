@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getReceivingareaDetails" doc:id="df9b238e-b8cc-4411-8fa0-11ae3c1e62cb" >
+		<min-log:put doc:name="transaction Properies" doc:id="c911737a-ab32-4fd3-9846-6a75f7599db9" key="receivingarea" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="54fa7c10-a00b-428a-8251-0df30d67ceac" msg="start: getReceivingareaDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="get receiving area details" doc:id="087b7dc9-0512-472c-92ae-01a770232a10" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT 
+ReceivingAreaId,
+ReceivingAreaCode,
+ReceivingAreaName,
+IsActive,
+CreatedBy,
+CreatedDateTime,
+ModifiedBy,
+ModifiedDateTime
+from MDR.M_ReceivingArea&quot;]
+</db:sql>
+		</db:select>
+		<ee:transform doc:name="response Payload" doc:id="6f4fe5fe-2799-4c8b-8fd8-92321852caef">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload,
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="c5d5b7d5-4965-4476-8bf8-bf7c5afb711b" msg="end: getReceivingareaDetails" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

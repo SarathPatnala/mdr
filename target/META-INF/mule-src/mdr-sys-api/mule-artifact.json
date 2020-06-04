@@ -1,0 +1,1 @@
+{"minMuleVersion":"4.1.2","secureProperties":["mule.key","anypoint.platform.client_secret","secure::mdr.db.pass","secure::mdr.mysql.db.pass","mule.newrelic.token"]}

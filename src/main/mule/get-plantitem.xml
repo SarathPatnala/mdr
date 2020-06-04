@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-plantitemFlow" doc:id="72beb86f-6a80-4048-bd7e-3b828ebceab2" >
+		<min-log:put doc:name="Put" doc:id="5e09bd03-2f02-4ec3-887f-2d1e30553cbc" transactionProperties="#[vars.transactionProperties]" key="ItemNumber" value=" #[attributes.uriParams.itemnbr]" target="transactionProperties"/>
+		<min-log:log doc:name="Start: Logger" doc:id="4a1c16cd-9f00-4d1e-9957-60c304c6d90f" transactionProperties="#[vars.transactionProperties]" msg='#["Start: Get Plant Item details for Item number:   " ++ vars.transactionProperties.ItemNumber]'/>
+		<db:select doc:name="Select Query on Database" doc:id="5a5b2d27-be74-4ed5-86f7-5f1949f0bb38" config-ref="mdr_database_config">
+			<db:sql >SELECT 
+BerryType as ProductName, TrimType as ProductType, VarietyCode, FieldType, InventoryType
+FROM dbo.AllPlantItem where ItemNbr =:ItemNbr</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'ItemNbr': vars.transactionProperties.ItemNumber
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Format Output" doc:id="e14bcbb1-6658-47ae-95a9-eda68c4e6c6d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End : Logger " doc:id="55064d9b-7ab0-48e6-9310-d83aafb34a5e" msg="End: Get Plant item information flow" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

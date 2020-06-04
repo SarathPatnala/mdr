@@ -1,0 +1,37 @@
+{
+  "RanchNbr": "0000107",
+  "Name": "Home Org",
+  "GrowerNbr": "0991010",
+  "GrowerName": "Rancho Royal Oaks, LLC",
+  "ProducingArea": "0001",
+  "ProducingAreaName": "Watsonville",
+  "BerryType": "Black",
+  "FieldType": "Organic",
+  "Blocks": [
+    {
+      "BlockDesignator": "F1552",
+      "BlockType": "RBABlock",
+      "Status": "Open"
+    },
+    {
+      "BlockDesignator": "F2249",
+      "BlockType": "RBABlock",
+      "Status": "Open"
+    },
+    {
+      "BlockDesignator": "F2747",
+      "BlockType": "RBABlock",
+      "Status": "Open"
+    },
+    {
+      "BlockDesignator": "F3050",
+      "BlockType": "RBABlock",
+      "Status": "Open"
+    },
+    {
+      "BlockDesignator": "F3246",
+      "BlockType": "RBABlock",
+      "Status": "Open"
+    }
+  ]
+}

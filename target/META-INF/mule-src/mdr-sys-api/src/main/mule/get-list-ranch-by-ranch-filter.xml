@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getlistranchbyranchfilterFlow" doc:id="50e588ff-c824-4197-8b75-03e61d4b6313" >
+		<min-log:put doc:name="transaction Properties" doc:id="842791d3-a3a6-4012-acf9-79214d052b3b" transactionProperties="#[vars.transactionProperties]" key="QueryParams" value="#[attributes.queryString]" target="transactionProperties" />
+		<min-log:log doc:name="start Logger" doc:id="67b1aefb-2e84-43c9-8f98-666e5f5826f5" transactionProperties="#[vars.transactionProperties]" msg=" start: getlistranchbyranchfilterFlow"/>
+		<choice doc:name="Choice" doc:id="dcc54aa8-32aa-4e28-a4d5-8ee01a252df5" >
+			<when expression="#[vars.dbFlag]">
+				<db:select doc:name="get list ranch " doc:id="e4e4b478-abcc-4c57-9639-425bfb21c4f9" config-ref="MySQL_Config">
+					<db:sql >#[&quot;Select R.RanchNbr,
+R.RanchName as Name,
+G.Group as GrowerGroup,
+G.GrowerNbr,
+G.GrowerName,
+F.FieldType,
+P.ProducingAreaCode as ProducingArea,
+RA.ReceivingAreaCode as ReceivingArea,
+GR.GrowingRegionCode as GrowingRegion,
+P.GrowingDistrictCode as GrowingDistrict,
+R.CommodityCode as BerryType,
+CM.CommodityId as CommodityId,
+R.Acres,
+R.ProducingAcres,
+R.Latitude as Latitude,
+R.Longitude as Longitude,
+R.VendorNbr as VendorAcctNbr,
+R.CustomerNbr as CustomerAcctNbr,
+R.IsActive as OverallStatus,
+R.ModifiedDateTime as LastModified
+From M_Ranch R join M_Grower G on R.GrowerNbr = G.GrowerNbr
+left outer join M_FieldType F on F.FieldTypeId = R.FieldTypeId
+join M_ProducingArea P on P.ProducingAreaCode = R.ProducingAreaCode
+join M_GrowingDistrict GD on GD.GrowingDistrictCode = P.GrowingDistrictCode
+join M_GrowingRegion GR on GR.GrowingRegionCode = GD.GrowingRegionCode
+left outer join M_ReceivingArea RA on RA.ReceivingAreaId = R.ReceivingAreaId
+join M_Commodity CM on CM.commodityCode = R.commodityCode WHERE 1 = 1 
+AND P.ProducingAreaCode = coalesce(:producingAreaCode,P.ProducingAreaCode)
+AND G.Group  = coalesce(:growingGroup,G.Group)
+AND R.RanchNbr = coalesce(:ranchNbr,R.RanchNbr)&quot;]
+
+</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+producingAreaCode : attributes.queryParams.producingarea,
+ranchNbr : attributes.queryParams.ranchnbr,
+growingGroup: attributes.queryParams.growergroup
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="response Payload" doc:id="d693cb50-6e06-4507-a898-5aa5118dd154" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+	{ 
+		Totalresults: sizeOf(payload),
+		Data : payload map {
+		"RanchNbr": $.RanchNbr,
+		"Name": $.Name,
+		"GrowerGroup": $.GrowerGroup,
+		"GrowerNbr": $.GrowerNbr,
+		"GrowerName": $.GrowerName,
+		"FieldType": $.FieldType,
+		"ProducingArea": $.ProducingArea,
+		"ReceivingArea": $.ReceivingArea,
+        "GrowingRegion": $.GrowingRegion,
+        "GrowingDistrict": $.GrowingDistrict,
+        "BerryType": $.BerryType,
+		"CommodityId" : $.CommodityId,
+        "Acres": $.Acres,
+        "ProducingAcres": $.ProducingAcres,
+        "LatLong": {
+            "Latitude": $.Latitude  as String {format: "0.00000"},
+            "Longitude": $.Longitude  as String {format: "0.00000"}
+        },
+        "VendorAcctNbr": $.VendorAcctNbr,
+        "CustomerAcctNbr": $.CustomerAcctNbr,
+        "OverallStatus": if($.OverallStatus == true) "Open" else "Closed",
+        "LastModified": $.LastModified
+		},
+		Status: "OK"
+		
+	}
+
+
+
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Create Dynamic Query" doc:id="63d37697-02aa-4f1f-910b-4a223ef39daf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+
+var status = attributes.queryParams.status
+var berrytype = attributes.queryParams.berrytype
+var growingdistrict = attributes.queryParams.growingdistrict
+var growingregion = attributes.queryParams.growingregion
+var producingarea = attributes.queryParams.producingarea
+var receivingarea = attributes.queryParams.receivingarea
+var growergroup = attributes.queryParams.growergroup
+var growernbr = attributes.queryParams.growernbr
+var masterranchnbr = attributes.queryParams.masterranchnbr
+var ranchnbr = attributes.queryParams.ranchnbr
+var fieldtype = attributes.queryParams.fieldtype
+var plantinggroupyear = attributes.queryParams.plantinggroupyear
+var dsainvestment = attributes.queryParams.dsainvestment
+var maxrecords = attributes.queryParams.maxrecords
+var modifiedafter = attributes.queryParams.modifiedafter
+
+var offset = vars.offset default 0
+
+var baseQuery = "TrnsRanchNbr AS RanchNbr,
+		MstrRanchNbr AS MasterRanchNbr,
+		MstrRanchName AS MasterRanchName, 
+		[TrnsRanchName] AS RanchName,
+		[FieldType], 
+		ISNULL([ParcelNbr], '') AS ParcelNbr, 
+		ISNULL(IsOrganic,0) AS IsOrganic,
+		ISNULL(IsApproved,0) AS IsApproved, 
+		ISNULL(ApprovalDate,CONVERT(Datetime, '01/01/1941', 120)) AS ApprovalDate, 
+		ISNULL(ApprovedBy,'') AS ApprovedBy,
+		ISNULL([CertificationAgency],'') AS CertificationAgency,
+		ISNULL([CDFANbr],'') AS CDFANbr, 
+		ISNULL(DefaultReceivingAreaCode,'') AS ReceivingArea, 
+		ISNULL(ProducingAreaCode,'') AS ProducingArea,
+		ISNULL([CustomerInfo], '') AS CustomerInfo, 
+		ISNULL([Mid], '') AS Mid, 
+		ISNULL([MidAlias],'') AS MidAlias, 
+		ISNULL([BusModelGroup], '') AS BusModelGroup,
+		ISNULL([Acres], 0) AS Acres,
+		ISNULL(ProducingAcres,0) AS ProducingAcres,
+		ISNULL(StreetAddr1,'') AS StreetAddr1,
+		ISNULL(StreetAddr2,'') AS StreetAddr2, 
+		ISNULL(Locality,'') AS Locality, ISNULL(AdminArea,'') AS AdminArea, 
+		ISNULL(PostalCode,'') AS PostalCode, 
+		ISNULL(Iso3Country,'') AS Iso3Country, 
+		ISNULL(AddAddrComponents,'') AS AddAddrComponents, 
+		ISNULL([Latitude], '0') AS Latitude, 
+		ISNULL([Longitude],'0') AS Longitude, 
+		ISNULL([VendorAcctNumber], '') AS VendorAcctNumber,
+		ISNULL([CustomerAcctNumber], '') AS CustomerAcctNumber,[OverallStatus],
+		BerryType, 
+		TrnsGrowerNbr AS GrowerNbr, 
+		TrnsGrowerName AS GrowerName, 
+		GrowerGroup, 
+		GrowingDistrictCode AS GrowingDistrict, 
+		GrowingRegionCode AS GrowingRegion,
+		ISNULL(PlantingGroupYear,'') AS PlantingGroupYear, 
+		ISNULL(DsaInvestment,'') AS DsaInvestment, 
+		ISNULL(IsoTransitionDate, CONVERT(Datetime, '01/01/1941', 120)) AS OrganicTransitionDate,
+		LastModifiedDateTime 
+ FROM AllTrnsRanchExtended "
+
+var endQuery = if((offset) > 0) (" OFFSET " ++ offset ++ " ROWS") else ""
+
+var finalParams =  (if(isEmpty(status) == false) ("OverallStatus= '" ++ status ++ "' :") else "") 
+                    ++ (if(isEmpty(berrytype) == false) ("BerryType= '" ++ berrytype ++ "' :") else "")
+                    ++ (if(isEmpty(growingdistrict) == false) ("GrowingDistrictCode= '" ++ growingdistrict ++ "' :") else "")
+                    ++ (if(isEmpty(growingregion) == false) ("GrowingRegionCode= '" ++ growingregion ++ "' :") else "")
+                    ++ (if(isEmpty(producingarea) == false) ("ProducingAreaCode= '" ++ producingarea ++ "' :") else "")
+                    ++ (if(isEmpty(receivingarea) == false) ("DefaultReceivingAreaCode= '" ++ receivingarea ++ "' :") else "")
+					++ (if(isEmpty(growergroup) == false) ("GrowerGroup= '" ++ growergroup ++ "' :") else "")
+					++ (if(isEmpty(growernbr) == false) ("TrnsGrowerNbr= '" ++ growernbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(ranchnbr) == false) ("TrnsRanchNbr= '" ++ ranchnbr ++ "' :") else "")
+					++ (if(isEmpty(fieldtype) == false) ("FieldType= '" ++ fieldtype ++ "' :") else "")
+					++ (if(isEmpty(plantinggroupyear) == false) ("PlantingGroupYear= '" ++ plantinggroupyear ++ "' :") else "")
+					++ (if(isEmpty(dsainvestment) == false) ("DsaInvestment= '" ++ dsainvestment ++ "' :") else "")
+					++ (if(isEmpty(modifiedafter) == false) ("LastModifiedDateTime>= '" ++ modifiedafter ++ "' :") else "")
+
+var finalQuery = "SELECT " ++ (if(isEmpty(maxrecords) == false) ("TOP " ++ maxrecords ++ " ") else "") ++ if(sizeOf(finalParams)> 0) (baseQuery ++ " WHERE " ++ finalParams) else baseQuery
+
+fun count(str: String, element: String) =
+  str splitBy("") reduce ((item, accumulator = 0) -> if(item == element) accumulator + 1 else accumulator)
+
+var amountOfColons = count(finalParams, ":")
+---
+
+
+    
+finalQuery replace ":" with (if($$ == amountOfColons - 1) "" else "AND ") ++ endQuery
+      
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<db:select doc:name="Select Query to Database" doc:id="f9699d5d-d865-4374-a861-8006e504c53a" config-ref="mdr_database_config">
+			<db:sql>#[payload]</db:sql>
+		</db:select>
+				<ee:transform doc:name="Format Output" doc:id="c59e9fab-2a33-431e-b390-2f8efe422667">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload map {
+		"RanchNbr": $.RanchNbr,
+		"Name": $.RanchName,
+		"GrowerGroup": $.GrowerGroup,
+		"GrowerNbr": $.GrowerNbr,
+		"GrowerName": $.GrowerName,
+		"FieldType": capitalize($.FieldType),
+		"ProducingArea": $.ProducingArea,
+		"ReceivingArea": $.ReceivingArea,
+        "GrowingRegion": $.GrowingRegion,
+        "GrowingDistrict": $.GrowingDistrict,
+        "BerryType": capitalize($.BerryType),
+        "ParcelNbr": $.ParcelNbr,
+        "BusModelGroup": $.BusModelGroup,
+        "Acres": $.Acres as String,
+        "ProducingAcres": $.ProducingAcres as String,
+        "LatLong": {
+            "Latitude": $.Latitude  as String {format: "0.00000"},
+            "Longitude": $.Longitude  as String {format: "0.00000"}
+        },
+        "VendorAcctNbr": $.VendorAcctNumber,
+        "CustomerAcctNbr": $.CustomerAcctNumber,
+        "OverallStatus": $.OverallStatus,
+        "LastModified": $.LastModifiedDateTime
+		
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="end: Logger" doc:id="4018889d-1ed6-44d9-878b-e8235cdd590a" msg="end: getlistranchbyranchfilterFlow" transactionProperties="#[vars.transactionProperties]"/>
+		
+	</flow>
+</mule>

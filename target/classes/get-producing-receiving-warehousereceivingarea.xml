@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get-Producing-Receiving-WarehouseReceivingareaDetails" doc:id="c89aec09-ddaf-481c-a466-b0363f586ece" >
+		<min-log:put doc:name="transaction Properies" doc:id="d8633e86-0560-4581-b006-94fd4e125958" key="warehousereceiving" value='#[attributes.queryString]' target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="fab7f091-21d9-4a17-8d15-d1308ab9a958" msg="start: get-Producing-Receiving-WarehouseReceivingareaDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="get producing receiving warehousereceivingarea details" doc:id="dacda5ae-eebf-4bfa-86b2-d6084e93a329" config-ref="MySQL_Config">
+			<db:sql>#[&quot;SELECT DISTINCT M_ProducingArea.ProducingAreaCode as M_ProducingArea_ProducingAreaCode,
+M_ProducingArea.ProducingAreaName as M_ProducingArea_ProducingAreaName,
+M_ReceivingArea.ReceivingAreaCode as M_ReceivingArea_ReceivingAreaCode,
+M_ReceivingArea.ReceivingAreaName as M_ReceivingArea_ReceivingAreaName,
+M_WarehouseReceivingArea.WarehouseNbr as M_WarehouseReceivingArea_WarehouseNbr
+FROM MDR.M_Ranch JOIN MDR.M_ProducingArea
+ON M_ProducingArea.ProducingAreaCode = M_Ranch.ProducingAreaCode
+JOIN MDR.M_ReceivingArea
+ON M_ReceivingArea.ReceivingAreaId = M_Ranch.ReceivingAreaId
+JOIN MDR.M_WarehouseReceivingArea
+ON M_WarehouseReceivingArea.ReceivingAreaCode = M_ReceivingArea.ReceivingAreaCode
+WHERE 1 = 1 
+AND M_ProducingArea.ProducingAreaCode = coalesce(:producingAreaCode,M_ProducingArea.ProducingAreaCode)
+AND M_ReceivingArea.ReceivingAreaCode  = coalesce(:receivingAreaCode,M_ReceivingArea.ReceivingAreaCode)
+AND M_WarehouseReceivingArea.WarehouseNbr = coalesce(:warehouseNbr,M_WarehouseReceivingArea.WarehouseNbr)&quot;
+]</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+producingAreaCode : attributes.queryParams.ProducingAreaCode,
+receivingAreaCode : attributes.queryParams.ReceivingAreaCode,
+warehouseNbr: attributes.queryParams.WarehouseNbr
+}]]]></db:input-parameters>
+		
+</db:select>
+		<ee:transform doc:name="response Payload" doc:id="b4793afd-b936-4676-ad61-7beb542ffdfc">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload,
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="63e7940a-4397-4ba4-94e7-c3fb4e981eff" msg="end: get-Producing-Receiving-WarehouseReceivingareaDetails" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd">
+	<flow name="getItemByItemNbrFilterFlow" doc:id="c42c1ab1-705f-4aa2-8b93-ce359bf182f7" >
+		<min-log:log doc:name="Start: Logger" doc:id="512b96be-7e57-4fde-bc6a-16204d14c17a" msg='"Start: Get itemdetails by  item number flow  "' transactionProperties="#[vars.transactionProperties]" />
+		<ee:transform doc:name="item &amp; companyid variables" doc:id="e359a550-d478-443f-9a61-e9056e4ec6ce" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="itemNbr" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.itemnbr]]></ee:set-variable>
+				<ee:set-variable variableName="companyId" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.companyid]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Query to retrieve item details by itemNbr" doc:id="c19074c1-e022-4dad-a027-f6daac0e4e22" config-ref="MySQL_Config" targetValue="#[output appication/json --- payload]">
+					<db:sql>SELECT 	* FROM M_Item  WHERE ItemNbr =:itemNbr AND Company =:companyId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	itemNbr: vars.itemNbr,
+	companyId: vars.companyId
+	 
+}]]]></db:input-parameters>
+				
+</db:select>
+		<choice doc:name="Choice" doc:id="9a0a7ef4-f778-4936-a725-616257aaf495">
+					<when expression="#[sizeOf(payload) &gt; 0]">
+						<ee:transform doc:name="Response payload" doc:id="2e69d7d1-2fbd-4240-a902-fc9e8aa850db">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="Record not found" doc:id="908375d6-7cef-4e87-b053-836ca87b6320">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"RecordNotFound - Cannot find item details for the entered item number " ++ vars.itemNbr]]></ee:set-payload>
+							</ee:message>
+							<ee:variables>
+								<ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/json
+---
+404]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</otherwise>
+				</choice>
+		<min-log:log doc:name="End: Logger" doc:id="3d08d185-ad14-43b2-be1b-94dd439dab01" msg='#["End: Get itemdetails by itemnbr filter flow"]' transactionProperties="#[vars.transactionProperties]" />
+	
+	</flow>
+</mule>

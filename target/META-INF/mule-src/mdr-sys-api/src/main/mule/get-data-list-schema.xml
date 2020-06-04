@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:microsoft-dynamics-ax="http://www.mulesoft.org/schema/mule/microsoft-dynamics-ax" xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd
+http://www.mulesoft.org/schema/mule/microsoft-dynamics-ax http://www.mulesoft.org/schema/mule/microsoft-dynamics-ax/current/mule-microsoft-dynamics-ax.xsd">
+	<flow name="getdatalistschemaFlow" doc:id="ad56e929-768c-4be1-b39c-931eea9a3914" >
+		<min-log:log doc:name="Start: Logger" doc:id="7067bf27-8b49-4b2b-a41f-165ee72aef23" msg="Start: Get data list schema flow" transactionProperties="#[vars.transactionProperties]"/>
+		<parse-template doc:name="Parse XML File" doc:id="42113be0-b48b-4ba6-a847-92c5291cd64a" location="LciDataLists.xml"/>
+		<set-payload value="#[payload]" doc:name="Set Payload to type XML" doc:id="a194edb5-413d-4da2-841a-4f1fc9566c35" mimeType="application/xml" />
+		<ee:transform doc:name="XML to JSON" doc:id="21736597-0265-44c2-b4e7-5c278b6c36a8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	SchemaName: payload.LciDataListSchema.SchemaName,
+	DataLists: payload.LciDataListSchema.DataLists.*LciDataList map ( lciDataList , indexOfLciDataList ) -> {
+		PropName: lciDataList.PropName default "",
+		DefaultCode: lciDataList.DefaultCode default "",
+		DataList: lciDataList.DataList.*LciCodeValue map ( lciCodeValue , indexOfLciCodeValue ) -> {
+			Code: lciCodeValue.Code default "",
+			Value: lciCodeValue.Value default ""
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End:Logger" doc:id="a2e3cd97-3589-40a6-8cec-cb11063cd981" msg="End: Get Data List Schema Flow" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

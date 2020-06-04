@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getPlanninggroupDetails" doc:id="44ab7903-8283-4129-b26a-3044f254a556" >
+		<min-log:put doc:name="transaction Properies" doc:id="8f477dab-89cd-4660-87b1-7cffb32c6689" key="planninggroup" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="c33cc0ec-6b15-48f9-823a-e2f29afaac6b" msg="start: getPlanninggroupDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="get planning group details" doc:id="0fafa950-3da3-4621-9551-e1f3ccb03a53" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT 
+ PlanningGroupId,
+ CommodityCode, 
+ PlanningGroup, 
+ IsActive, 
+ CreatedBy, 
+ CreatedDateTime, 
+ ModifiedBy, 
+ ModifiedDateTime
+from MDR.M_PlanningGroup &quot;]</db:sql>
+		</db:select>
+		<ee:transform doc:name="response Payload" doc:id="1cfc718e-c822-485b-a651-ee6023d79dab">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload,
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="998389f0-574e-4549-8c0c-6216feb4e525" msg="end: getPlanninggroupDetails" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

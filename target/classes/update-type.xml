@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="update-typeFlow" doc:id="2de66905-970f-4a36-a01c-f3938bb65c5f" >
+		<min-log:put doc:name="TransactionProperties" doc:id="0850ea23-b1b2-424a-95e3-cf08affd592e" key="updatetype" value="#[payload.enAttributeType]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Logger" doc:id="9a0eb571-b00f-47a6-af4c-ac6154608d24" msg="Start: Flow to update/edit type" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select" doc:id="975c4b8d-e508-43b1-97b5-beeecd9780ae" config-ref="mdr_database_config" target="recordsInTable">
+			<db:sql >SELECT * FROM [MDR].[dbo].[PlantItemLookup]
+WHERE Attribute=:enAttributeType AND AttributeValue=:NewValue
+			</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"enAttributeType" : payload.enAttributeType,
+	"NewValue" : payload.NewValue
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="9162e1b2-0312-46b8-84d4-5a212468d999" >
+			<when expression="#[sizeOf(vars.recordsInTable) &gt; 0]">
+				<logger level="INFO" doc:name="Logger" doc:id="9ac0047c-2d70-4052-ae0b-fada4cbad554" message="This is not allowed. Only one recordType and value combination is allowed in table. payload: #[payload]"/>
+				<set-variable value="404" doc:name="httpStatus" doc:id="22777628-c1eb-4fbb-8c89-631496c17a1b" variableName="httpStatus"/>
+				<ee:transform doc:name="Transform Message" doc:id="4f9ddb55-df7b-433c-bbc4-f79da50af5fe" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{"Message": "Record not Processed. Duplicate record found."}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:update doc:name="Update Query to update/edit type" doc:id="416d63a4-6839-4f30-b58b-94926dc78e94" config-ref="mdr_database_config">
+			<db:sql>UPDATE  [MDR].[dbo].[PlantItemLookup]
+SET Attribute=:enAttributeType, AttributeValue=:NewValue, LastChangedDate=GETDATE( ), LastChangedBy=:LastChangedBy, Status=:Status
+WHERE Attribute=:enAttributeType and AttributeValue=:OldValue</db:sql>
+			<db:input-parameters><![CDATA[#[{
+			"enAttributeType" : payload.enAttributeType,
+			"OldValue" : payload.OldValue,
+			"NewValue" : payload.NewValue,
+			"LastChangedBy": payload.LastChangedBy,					
+			"Status" : "A"
+		}]]]></db:input-parameters>
+		</db:update>
+				<set-variable value="201" doc:name="httpStatus" doc:id="f91dfd8e-50ad-4b5b-bf6e-e43c16018436" variableName="httpStatus" />
+				<ee:transform doc:name="Sucess Message" doc:id="9173a99e-d9ab-4d65-9e4d-ad050ae3c14d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"Message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="End Logger" doc:id="bc1784be-a04b-49ad-9306-94345956cab9" msg="End: Flow to update/edit type" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

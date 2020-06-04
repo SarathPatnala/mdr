@@ -1,0 +1,36 @@
+{
+  "Totalresults": 3,
+  "Data": [
+    {
+      "ReceivingAreaName": "Arandas",
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-03-19T04:26:36",
+      "ReceivingAreaId": 1,
+      "IsActive": true,
+      "ModifiedBy": "",
+      "ReceivingAreaCode": "ARA",
+      "CreatedDateTime": "2020-03-19T04:26:36"
+    },
+    {
+      "ReceivingAreaName": "Baja",
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-03-19T04:26:36",
+      "ReceivingAreaId": 4,
+      "IsActive": true,
+      "ModifiedBy": "",
+      "ReceivingAreaCode": "BJA",
+      "CreatedDateTime": "2020-03-19T04:26:36"
+    },
+    {
+      "ReceivingAreaName": "Yuma",
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-03-19T04:26:36",
+      "ReceivingAreaId": 54,
+      "IsActive": true,
+      "ModifiedBy": "",
+      "ReceivingAreaCode": "YMA",
+      "CreatedDateTime": "2020-03-19T04:26:36"
+    }
+  ],
+  "Status": "Ok"
+}

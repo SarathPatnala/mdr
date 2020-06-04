@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getListRanch" doc:id="1914412b-1402-4595-b0a9-0f71ddec50d0" >
+		<min-log:put doc:name="transaction Properies" doc:id="7990179a-f09e-43ff-86a0-079a03b193de" key="RanchNumber" value="#[attributes.uriParams.ranchnbr]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties" />
+		<min-log:log doc:name="start: Logger" doc:id="152db848-992f-437b-817a-ef5e863a2445" msg='start : getListRanch' transactionProperties="#[vars.transactionProperties]" />
+		<choice doc:name="Choice" doc:id="9390bac2-a911-4ae5-9db6-18c07e5fc003" >
+			<when expression="#[vars.dbFlag]">
+				<db:select doc:name="get ranch details by ranch number" doc:id="605b2e19-93d4-49b0-891e-24a205b23706" config-ref="MySQL_Config">
+					<db:sql >#[&quot;Select R.RanchNbr,
+R.RanchName as Name,
+G.Group as GrowerGroup,
+G.GrowerNbr,
+G.GrowerName,
+F.FieldType,
+P.ProducingAreaCode as ProducingArea,
+P.ProducingAreaName as ProducingAreaName,
+RA.ReceivingAreaCode as ReceivingArea,
+GR.GrowingRegionCode as GrowingRegion,
+P.GrowingDistrictCode as GrowingDistrict,
+R.CommodityCode as BerryType,
+CM.CommodityId as CommodityId,
+R.Acres,
+R.ProducingAcres,
+R.Latitude,
+R.Longitude,
+R.VendorNbr as VendorAcctNbr,
+R.CustomerNbr as CustomerAcctNbr,
+R.IsActive as OverallStatus,
+R.ModifiedDateTime as LastModified
+From M_Ranch R join M_Grower G on R.GrowerNbr = G.GrowerNbr
+left outer join M_FieldType F on F.FieldTypeId = R.FieldTypeId
+join M_ProducingArea P on P.ProducingAreaCode = R.ProducingAreaCode
+join M_GrowingDistrict GD on GD.GrowingDistrictCode = P.GrowingDistrictCode
+join M_GrowingRegion GR on GR.GrowingRegionCode = GD.GrowingRegionCode
+left outer join M_ReceivingArea RA on RA.ReceivingAreaId = R.ReceivingAreaId
+join M_Commodity CM on CM.commodityCode = R.commodityCode WHERE R.RanchNbr = :RachnNumber&quot;]
+
+</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+RachnNumber : attributes.uriParams.ranchnbr
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="response Payload" doc:id="93098344-3f67-4c65-801a-57feadb85ecc">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(sizeOf(payload) > 0)
+	{ 
+		Totalresults: sizeOf(payload),
+		Data : {
+		   "RanchNbr": payload[0].RanchNbr,
+			"Name": payload[0].Name,
+			"GrowerGroup": payload[0].GrowerGroup,
+			"GrowerNbr": payload[0].GrowerNbr,
+			"GrowerName": payload[0].GrowerName,
+			"FieldType": if(payload[0].FieldType != null) upper(payload[0].FieldType) else "",
+			"ProducingArea": payload[0].ProducingArea,
+			"ProducingAreaName": payload[0].ProducingAreaName,
+			"ReceivingArea": payload[0].ReceivingArea,
+			"GrowingRegion": payload[0].GrowingRegion,
+			"GrowingDistrict": payload[0].GrowingDistrict,
+			"BerryType": if(payload[0].BerryType != null) upper(payload[0].BerryType) else "",
+			"CommodityId" : payload[0].CommodityId,
+			"Acres": payload[0].Acres as String,
+			"ProducingAcres": payload[0].ProducingAcres as String,
+			"LatLong": {
+				"Latitude": payload[0].Latitude  as String {format: "0.00000"},
+				"Longitude": payload[0].Longitude  as String {format: "0.00000"}
+			},
+			"VendorAcctNbr": payload[0].VendorAcctNbr,
+		    "CustomerAcctNbr": payload[0].CustomerAcctNbr,
+			"OverallStatus": if(payload[0].OverallStatus == true) "Open" else "Closed",
+			"LastModified": payload[0].LastModified
+		}
+		
+	}
+else {
+	Totalresults : sizeOf(payload),
+	Data : payload
+}
+			
+			
+]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+			</when>
+			<otherwise>
+				<db:select doc:name="get ranch details by ranch number from mdr database" doc:id="84da5c91-909e-4b56-a87b-a2b1f1c9f4c0" config-ref="mdr_database_config">
+			<db:sql>#[&quot;SELECT 	TrnsRanchNbr AS RanchNbr,
+		MstrRanchNbr AS MasterRanchNbr, 
+		MstrRanchName AS MasterRanchName, 
+		[TrnsRanchName] AS RanchName,
+		[FieldType], 
+		ISNULL([ParcelNbr], '') AS ParcelNbr,
+		ISNULL(IsOrganic,0) AS IsOrganic,
+		ISNULL(IsApproved,0) AS IsApproved, 
+		ISNULL(ApprovalDate,CONVERT(Datetime, '01/01/1941', 120)) AS ApprovalDate, 
+		ISNULL(ApprovedBy,'') AS ApprovedBy,
+		ISNULL([CertificationAgency],'') AS CertificationAgency,
+		ISNULL([CDFANbr],'') AS CDFANbr, 
+		ISNULL(DefaultReceivingAreaCode,'') AS ReceivingArea, 
+		ISNULL(ProducingAreaCode,'') AS ProducingArea,
+        ISNULL(ProducingAreaDescription,'') AS ProducingAreaName,
+		ISNULL([CustomerInfo], '') AS CustomerInfo, 
+		ISNULL([Mid], '') AS Mid, 
+		ISNULL([MidAlias],'') AS MidAlias, 
+		ISNULL([BusModelGroup], '') AS BusModelGroup, 
+		ISNULL([Acres], 0) AS Acres, 
+		ISNULL(ProducingAcres,0) AS ProducingAcres,
+		ISNULL(StreetAddr1,'') AS StreetAddr1,
+		ISNULL(StreetAddr2,'') AS StreetAddr2, 
+		ISNULL(Locality,'') AS Locality, 
+		ISNULL(AdminArea,'') AS AdminArea, 
+		ISNULL(PostalCode,'') AS PostalCode, 
+		ISNULL(Iso3Country,'') AS Iso3Country, 
+		ISNULL(AddAddrComponents,'') AS AddAddrComponents, 
+		ISNULL([Latitude], '0') AS Latitude, 
+		ISNULL([Longitude],'0') AS Longitude, 
+		ISNULL([VendorAcctNumber], '') AS VendorAcctNumber, 
+		ISNULL([CustomerAcctNumber], '') AS CustomerAcctNumber,
+		[OverallStatus],
+		BerryType, 
+		TrnsGrowerNbr AS GrowerNbr, 
+		TrnsGrowerName AS GrowerName, 
+		GrowerGroup, 
+		GrowingDistrictCode AS GrowingDistrict, 
+		GrowingRegionCode AS GrowingRegion, 
+		ISNULL(PlantingGroupYear,'') AS PlantingGroupYear, 
+		ISNULL(DsaInvestment,'') AS DsaInvestment, 
+		ISNULL(IsoTransitionDate, CONVERT(Datetime, '01/01/1941', 120)) AS OrganicTransitionDate, 
+		LastModifiedDateTime FROM AllTrnsRanchExtended 
+        WHERE TrnsRanchNbr = '&quot; ++ vars.transactionProperties.RanchNumber ++ &quot;'&quot;]</db:sql>
+		</db:select>
+				<ee:transform doc:name="response Payload" doc:id="8279f061-2034-4098-90fc-f302103c22e9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(sizeOf(payload) > 0)
+	{ 
+		Totalresults: sizeOf(payload),
+		Data : {
+		   "RanchNbr": payload[0].RanchNbr,
+			"Name": payload[0].RanchName,
+			"GrowerGroup": payload[0].GrowerGroup,
+			"GrowerNbr": payload[0].GrowerNbr,
+			"GrowerName": payload[0].GrowerName,
+			"FieldType": if(payload[0].FieldType != null) upper(payload[0].FieldType) else "",
+			"ProducingArea": payload[0].ProducingArea,
+			"ProducingAreaName": payload[0].ProducingAreaName,
+			"ReceivingArea": payload[0].ReceivingArea,
+			"GrowingRegion": payload[0].GrowingRegion,
+			"GrowingDistrict": payload[0].GrowingDistrict,
+			"BerryType": if(payload[0].BerryType != null) upper(payload[0].BerryType) else "",
+			"ParcelNbr": payload[0].ParcelNbr,
+			"BusModelGroup": payload[0].BusModelGroup,
+			"Acres": payload[0].Acres as String,
+			"ProducingAcres": payload[0].ProducingAcres as String,
+			"LatLong": {
+				"Latitude": payload[0].Latitude  as String {format: "0.00000"},
+				"Longitude": payload[0].Longitude  as String {format: "0.00000"}
+			},
+				"VendorAcctNbr": payload[0].VendorAcctNumber,
+		   "CustomerAcctNbr": payload[0].CustomerAcctNumber,
+			"OverallStatus": payload[0].OverallStatus,
+			"LastModified": payload[0].LastModifiedDateTime
+		}
+		
+	}
+else {
+	Totalresults : sizeOf(payload),
+	Data : payload
+}
+			
+			
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="end: Logger" doc:id="3d64409d-f7d1-43a8-a56d-f8ec2fbcb63a" msg="end : getListRanch" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

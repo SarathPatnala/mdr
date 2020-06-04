@@ -1,0 +1,31 @@
+api:
+  id: "15473644"
+  base: "api"
+
+http:
+  listener.port: "8092"
+  listener.keystore: "driscolls-keystore.jks"
+  listener.keystorepass: "driscollsPASS98347"
+
+mdr:
+  db.host: "AGUATBI-DBLST.driscolls.com"
+  db.port: "1433"
+  db.domain: "NET1"
+  db.user: "XXXXXXXXX"
+  db.pass: "XXXXXXXXX"
+  db.name: "MDR"
+  db.driver: "net.sourceforge.jtds.jdbc.Driver"
+  db.poolingprofile.max.poolsize: "100"
+  db.poolingprofile.min.poolsize: "0"
+  mysql.db.host: "xxxxxxxxxxxxxxx"
+  mysql.db.port: "3306"
+  mysql.db.user: "XXXXXXXXX"
+  mysql.db.pass: "XXXXXXXX"
+  mysql.db.name: "MDR"
+  
+mysql.db.params:
+  db.createdby: "Mulesoft"
+  
+ping:
+  application.name: "${project.artifactId}"
+  application.version: "${project.version}"

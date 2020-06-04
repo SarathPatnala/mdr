@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getlistgrowerFlow" doc:id="2148bb44-1234-4cbc-8cac-59e2d2e3a88f" >
+		<min-log:put doc:name="Put" doc:id="de48b74b-9bd7-42ec-ba8a-37eb938c14e6" key="GrowerNumber" value="#[attributes.uriParams.growernbr]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties" />
+		<min-log:log doc:name="Start: Logger" doc:id="81a62226-fb03-42db-b8d9-afc5533a8145" msg='#["Start: Get grower details by grower number for grower number:  " ++ vars.transactionProperties.GrowerNumber]' transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select Query to Database" doc:id="6c6f7842-ccf0-4f04-91a6-7efdf1844157" config-ref="mdr_database_config">
+			<db:sql >#[&quot;SELECT TrnsGrowerNbr AS GrowerNbr, TrnsGrowerName AS GrowerName, [MstrGrowerNbr] AS MasterGrowerNbr, MstrGrowerName AS MasterGrowerName,[BerryType],[GrowerGroup] AS GrowerGroup, [GrowingDistrictCode] AS GrowingDistrict,[GrowingRegionCode] AS GrowingRegion,StreetAddr1,StreetAddr2, Locality, AdminArea, PostalCode, Iso3Country, AddAddrComponents, ISNULL([VendorAcctNbr], '') AS VendorAcctNbr, ISNULL([CustomerAcctNbr], '') AS CustomerAcctNbr,[OverallStatus], LastModifiedDateTime FROM[dbo].[AllTrnsGrowerExtended] WHERE TrnsGrowerNbr = '&quot; ++ vars.transactionProperties.GrowerNumber ++ &quot;'&quot;]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Formatting Output" doc:id="7f132d77-2bff-41ce-8ff4-9c5a6c5092d6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+{
+
+    		
+		"GrowerNbr": payload[0].GrowerNbr,
+        "GrowerName": payload[0].GrowerName,
+        "MasterGrowerNbr": payload[0].MasterGrowerNbr,
+        "MasterGrowerName": payload[0].MasterGrowerName,
+        "GrowerGroup": payload[0].GrowerGroup,
+        "Addresses": payload[0].AddAddrComponents,
+        "BerryType": capitalize(payload[0].BerryType),
+        "GrowingRegion": payload[0].GrowingRegion,
+        "GrowingDistrict": payload[0].GrowingDistrict,
+        "VendorAcctNbr": payload[0].VendorAcctNbr,
+        "CustomerAcctNbr": payload[0].CustomerAcctNbr,
+        "OverallStatus": payload[0].OverallStatus,
+        "LastModified": payload[0].LastModifiedDateTime
+	
+    
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="a5062686-2632-4fc2-861b-d97c21a88770" msg="End: Get List Grower Flow" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

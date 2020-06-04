@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="post-typeFlow" doc:id="4376485d-22db-47f3-ba2d-dad05d4f0e9c">
+
+		<min-log:put doc:name="TransactionProperties"
+			doc:id="09b652ed-7f72-4db3-9167-5ca087ab36b6" key="Addtype"
+			value="#[payload.enAttributeType]" transactionProperties="#[vars.transactionProperties]"
+			target="transactionProperties" />
+
+		<min-log:log doc:name="Start Logger"
+			doc:id="3012595f-cbf4-4665-9325-28b4a0283443" msg="Start: Flow to post type"
+			transactionProperties="#[vars.transactionProperties]" />
+
+
+
+		<db:select doc:name="Fetch from table if exists" doc:id="26a1db5c-15cb-4e3d-8090-99d30a38b57f"
+
+			config-ref="mdr_database_config" target="recordsInTable">
+
+			<db:sql>SELECT * FROM [MDR].[dbo].[PlantItemLookup]
+WHERE Attribute=:enAttributeType AND AttributeValue=:value
+			</db:sql>
+
+			<db:input-parameters><![CDATA[#[{
+	"enAttributeType" : payload.enAttributeType,
+	"value" : payload.value
+}]]]></db:input-parameters>
+
+		</db:select>
+
+
+
+
+
+		<choice doc:name="Choice" doc:id="b67d9fd6-6534-455b-90b7-a85c348b7758">
+
+			<when expression="#[sizeOf(vars.recordsInTable) &gt; 0]">
+
+				<logger level="INFO" doc:name="Logger"
+					doc:id="1b80bbfb-cd64-4f05-ba33-29873b9f4d4d"
+					message="This is not allowed. Only one recordType and value combination is allowed in table. payload: #[payload]" />
+
+				<set-variable value="409" doc:name="http Code"
+					doc:id="547c7552-bd3a-440c-a1e4-fa44170b716b" variableName="httpStatus" />
+
+				<ee:transform doc:name="Transform Message"
+					doc:id="575be8c5-91e3-411e-acf1-cff1db6fe2e6">
+
+					<ee:message>
+
+						<ee:set-payload><![CDATA[%dw 2.0
+
+output application/json
+
+---
+
+{"Message": "Record not Processed. Duplicate record found."}]]></ee:set-payload>
+
+					</ee:message>
+
+				</ee:transform>
+
+
+
+
+
+			</when>
+
+			<otherwise>
+
+				<db:insert doc:name="Insert into PlantItemLookup table"
+					doc:id="15b0bf96-5521-4c07-8b8b-783bc3ceee98" config-ref="mdr_database_config">
+
+					<db:sql>INSERT INTO [MDR].[dbo].[PlantItemLookup] 
+(Attribute, AttributeValue, LastChangedDate, CreatedDate, CreatedBy, LastChangedBy, Status )
+VALUES
+(:enAttributeType, :value, GETDATE( ), GETDATE( ), :CreatedBy, :LastChangedBy, :Status)
+					</db:sql>
+
+					<db:input-parameters><![CDATA[#[{
+			"enAttributeType" : payload.enAttributeType,
+			"value" : payload.value,
+			"CreatedBy" : payload.CreatedBy,
+			"LastChangedBy" : payload.LastChangedBy,
+			"Status" : "A"
+}]]]></db:input-parameters>
+
+				</db:insert>
+
+				<set-variable value="201" doc:name="http Code"
+					doc:id="8c11f2b3-3bdb-4773-a1b8-e8984e3407d5" variableName="httpStatus" />
+
+				<ee:transform doc:name="Transform Message"
+					doc:id="5b4c533c-0cc9-40a7-8cc8-2e76dce986f8">
+
+					<ee:message>
+
+						<ee:set-payload><![CDATA[%dw 2.0
+
+output application/json
+
+---
+
+{"Message": "Record Processed Successfully"}]]></ee:set-payload>
+
+					</ee:message>
+
+				</ee:transform>
+
+			</otherwise>
+
+		</choice>
+
+
+
+		<min-log:log doc:name="End Logger"
+			doc:id="3c778abd-3e00-4007-845e-35f0cdcc37f0" msg="End: Flow to post type"
+			transactionProperties="#[vars.transactionProperties]" />
+	</flow>
+</mule>

@@ -1,0 +1,33 @@
+{
+  "TotalResults": 3,
+  "Data": [
+    {
+      "ItemNbr": "108901",
+      "BerryTypeCode": "STRAW",
+      "PlantType": "Bare Root Green",
+      "VarietyCode": "VBE",
+      "Variety": "Anya™",
+      "FieldType": "Conventional",
+      "InventoryType": "Finished Goods"
+    },
+    {
+      "ItemNbr": "108902",
+      "BerryTypeCode": "STRAW",
+      "PlantType": "Bare Root Green",
+      "VarietyCode": "VBE",
+      "Variety": "Osceola",
+      "FieldType": "Conventional",
+      "InventoryType": "Finished Goods"
+    },
+    {
+      "ItemNbr": "108963",
+      "BerryTypeCode": "STRAW",
+      "PlantType": "Bare Root Green",
+      "VarietyCode": "VBE",
+      "Variety": "Pomona™ (580U112)",
+      "FieldType": "Organic",
+      "InventoryType": "Finished Goods"
+    }
+  ],
+  "Status": "Ok"
+}

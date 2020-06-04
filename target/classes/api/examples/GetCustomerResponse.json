@@ -1,0 +1,32 @@
+{  
+   "BillToCustomer":{  
+      "CustomerNbr":"",
+      "CustomerName":"",
+      "Address":{  
+         "StreetAddress":"",
+         "Locality":"",
+         "AdministrativeArea":"",
+         "PostalCode":"",
+         "Iso3Country":"",
+         "AdditionalComponents":"",
+         "FormattedAddress":""
+      },
+      "Country":"",
+      "IsCategoryManaged":""
+   },
+   "ShipToCustomer":{  
+      "CustomerNbr":"",
+      "CustomerName":"",
+      "Address":{  
+         "StreetAddress":"",
+         "Locality":"",
+         "AdministrativeArea":"",
+         "PostalCode":"",
+         "Iso3Country":"",
+         "AdditionalComponents":"",
+         "FormattedAddress":""
+      },
+      "Country":"",
+      "IsCategoryManaged":""
+   }
+}

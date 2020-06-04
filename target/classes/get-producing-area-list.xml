@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getProducingAreaList" doc:id="a41f33d1-b258-4854-ac47-0a0e1fbeecc5" >
+		<min-log:put doc:name="transaction Properies" doc:id="f3cd44d1-e78b-454e-86a5-37877769b1f8" key="producingarea" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="354b4450-f2c6-44cc-bf1a-c62c765ca4d6" msg="start: getProducingAreaList" transactionProperties="#[vars.transactionProperties]"/>
+		<choice doc:name="Choice" doc:id="6f8c517b-5683-4a8e-9b91-7881b15eaa22" >
+			<when expression="#[vars.dbFlag]">
+				<db:select doc:name="select Query to get producing area name and code" doc:id="b2a0fe03-83c5-4202-8eec-85b4cda39067" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT 
+ProducingAreaCode,
+ProducingAreaName
+ from MDR.M_ProducingArea WHERE IsActive = 1 &quot;]
+</db:sql>
+		</db:select>
+				<ee:transform doc:name="response Payload" doc:id="471d6bd8-5f0e-4403-b452-46cedb7f7dc3">
+			<ee:message>
+				<ee:set-payload><![CDATA[ %dw 2.0
+output application/json
+---
+if(sizeOf(payload) > 0)({
+	"TotalResults": sizeOf(payload),
+	"Data": payload map{
+		"Code": $.ProducingAreaCode,
+		"Descript": $.ProducingAreaName
+	},
+	"Status": "Ok"
+})
+else {
+ "Message" : "Records Not Found"
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select Query to Database" doc:id="74c6ddcc-15c2-44d6-81d7-4d8de59efe53" config-ref="mdr_database_config">
+			<db:sql>SELECT Code,[Description],ISNULL(Latitude,'0') AS Latitude, ISNULL(Longitude,'0') AS Longitude,ISNULL(GeoShape,'') AS GeoShape,GrowingDistrictCode, OverallStatus, LastModifiedDateTime 
+FROM AllProducingArea</db:sql>
+		</db:select>
+				<ee:transform doc:name="response Payload" doc:id="5939dc37-4332-4198-992c-bdb3ae7cc8bd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"Data": payload map{
+		"Code": $.Code default "",
+		"Descript": $.Description default ""
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="end: Logger" doc:id="208fbb1a-f183-4c7c-a90c-215f373ec352" msg="end: getProducingAreaList" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

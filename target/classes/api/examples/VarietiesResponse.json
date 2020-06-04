@@ -1,0 +1,20 @@
+{
+   "TotalResults": 4,
+   "Varieties":[
+	{
+		"Variety" : "RJ0799.3",
+		"Variety_Name": "VAG"
+	},
+	{
+		"Variety" : "Sunrise™ (RB678.1)",
+		"Variety_Name": "VAI"
+	},
+	{
+		"Variety" : "Whatcom™ (RD438.2))",
+		"Variety_Name": "VAV"
+	},
+	{
+		"Variety" : "RJ0732.2",
+		"Variety_Name": "VAZ"
+	}
+]

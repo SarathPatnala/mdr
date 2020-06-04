@@ -1,0 +1,13 @@
+{  
+   "ProductionSeasonId ":0,
+   "ProductionSeasonName":"RASPCM2019",
+   "Commodity":"RASP",
+   "StartDate":"2019-01-01",
+   "EndDate":"2019-06-30",
+   "ChangeInfo":{  
+      "CreatedBy":"annadurai.sellamuthu",
+      "CreatedDateTime":"2019-01-05T14:25:13.1870979-07:00",
+      "LastChangedBy":"annadurai.sellamuthu",
+      "LastChangedDateTime":"2019-01-05T14:25:13.1870979-07:00"
+   }
+}

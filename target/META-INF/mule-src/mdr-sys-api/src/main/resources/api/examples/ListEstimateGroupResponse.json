@@ -1,0 +1,27 @@
+{
+  "Totalresults": 7,
+  "Data": [
+    {
+      "Descript": "PROCESS"
+    },
+    {
+      "Descript": "RASPG"
+    },
+    {
+      "Descript": "RegJumbo"
+    },
+    {
+      "Descript": "Regular"
+    },
+    {
+      "Descript": "SEASONSFINEST"
+    },
+    {
+      "Descript": "STEMS"
+    },
+    {
+      "Descript": "SUNSHINE"
+    }
+  ],
+  "Status": "Ok"
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-typesFlow" doc:id="35e7dba1-e582-4659-93a9-8fe64c3e7a71" >
+		<min-log:log doc:name="Start Logger" doc:id="0514585e-d5a6-4e33-83a2-899fd8dae8bf" msg="Start: Flow to get all types" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="SQL Query to select all types" doc:id="9e885ac3-8da4-4fe4-8c68-fc0e2fbf5444" config-ref="mdr_database_config">
+			<db:sql >SELECT Attribute, AttributeValue FROM [MDR].[dbo].[PlantItemLookup]
+WHERE Status = 'A'</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2ca204e8-8606-43ca-b730-4327aceb0b9a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	FieldTypes: (payload filter ($.Attribute == "FieldType")).AttributeValue,
+	InventoryTypes: (payload filter ($.Attribute == "InventoryType")).AttributeValue,
+	PlantTypes: (payload filter ($.Attribute == "PlantType")).AttributeValue
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Logger" doc:id="171bde3c-e29c-4918-82d7-36fb43319720" msg="End: Flow to get all types" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-all-plant-item-dataFlow" doc:id="b89d7171-613a-40d9-8d8a-2a1104e9e6d0" >
+		<min-log:log doc:name="Start Logger" doc:id="d710cf5e-cde0-4592-954d-71dbf661d751" msg="Start: Flow to get all plant items list" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select Query to get all plant items as list" doc:id="8e7c809f-7b08-4780-9e83-bff819b8d1a4" config-ref="mdr_database_config">
+			<db:sql >SELECT * FROM  [MDR].[dbo].[AllItemPlantAttribute]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="74726eb6-2396-4049-84ed-657a6a89e166" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults" : sizeOf(payload),
+	"Data" : payload,
+	"Status" : "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Logger" doc:id="c4cb7568-ef7e-4c1b-85a2-f3fcd7151089" msg="End: Flow to get all plant items" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

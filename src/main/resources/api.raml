@@ -1,0 +1,822 @@
+#%RAML 1.0
+title: LongCane Inventory Master Data system API
+version: v2
+protocols:  [HTTPS]
+baseUri: https://anypoint.mulesoft.com/mocking/api/v2/links/073b51d2-b6f6-456b-8d61-bf166831dcef/ 
+
+securitySchemes:
+#  client-credentials:
+#   type: x-client-credentials
+#    description: Use application client_id and secret assigned by API administrator.
+#  basic:
+#    type: Basic Authentication
+
+uses: 
+  commontraits: traits/traits.raml
+  commontypes: api/libraries/CommonDataTypesLibrary.raml
+
+/ping:
+  get:
+    description: Return a standard response.
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/ping/get-response.json
+  put:
+    description: Return a standard response
+    is: [commontraits.accept-required,commontraits.content-type-required, commontraits.standard-error-responses]
+    body:
+      application/json:
+        example: !include examples/ping/put-request.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/ping/put-response.json
+
+/datalist:
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: Gets static data list
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/DataListResponse.json
+
+/warehouse:
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the warehouse location list
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/WarehouseLocationListResponse.json
+
+/producingarea:
+  displayName: ProducingArea 
+  description: Producing Area table transactions
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the poducig area list
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/ProducingAreaListResponse.json
+  /{ranchnbr}:
+    displayName: RanchNumber 
+    uriParameters:
+      ranchnbr:
+        type: commontypes.ranchnbr
+        required: true
+    get:
+      is: [commontraits.accept-required, commontraits.standard-error-responses ]
+      description: get producing area details either all or single by query parameters
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include api/examples/GetProducingAreaByRanchResponse.json
+            
+/productionseasonId:
+  /{productionseason}:
+    uriParameters: 
+      productionseason: 
+        type: commontypes.productionseason
+        required: true
+    get:
+      is: [commontraits.accept-required, commontraits.standard-error-responses ]
+      description: Gets Production Season Id
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include api/examples/PlantItemResponse.json            
+
+/listgrower:
+  /{growernbr}:
+    uriParameters: 
+      growernbr: 
+        type: commontypes.growernbr
+        required: true
+    get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: Get list of growers on the basis of grower number.
+      responses: 
+        200:
+          description: Request Processed Successfully
+          body: 
+            application/json:
+              example: !include api/examples/ListGrowerResponse.json
+  
+/listranch:
+  displayName: RanchDetails 
+  description: Ranch table transactions 
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: Gets the list of all the ranch.
+    queryParameters: 
+      status:
+        type: commontypes.status
+        required: false
+        description: Status is thye current status of the ranch example open, closed,etc
+      berrytype:
+        type: commontypes.berrytype
+        required: false
+        description: This parameter defines the berrytype.
+      growingdistrict:
+        type: commontypes.growingdistrict
+        required: false
+        description: This parameter defines the growing district
+      growingregion:
+        type: commontypes.growingregion
+        required: false
+        description: this parameter defines the growing region.
+      producingarea:
+        type: commontypes.producingarea
+        required: false
+        description: This parameter defines the producing area
+      receivingarea:
+        type: commontypes.receivingarea
+        required: false
+        description: This parameter defines the receiving area
+      growergroup:
+        type: commontypes.growergroup
+        required: false
+        description: this parameter defines the grower group.
+      growernbr:
+        type: commontypes.growernbr
+        required: false
+        description: This parameter defines the grower number.
+      masterranchnbr:
+        type: commontypes.masterranchnbr
+        required: false
+        description: This parameter defines the master ranch number
+      ranchnbr:
+        type: commontypes.ranchnbr
+        required: false
+        description:  This parameter defines the ranch number
+      fieldtype:
+        type: commontypes.fieldtype
+        required: false
+        description: This parameter defines the field type
+      plantinggroupyear:
+        type: commontypes.plantinggroupyear
+        required: false
+        description: This parameter defines the planting group year
+      dsainvestment:
+        type: commontypes.dsainvestment
+        required: false
+        description: This parameter defines the dsa investment
+      maxrecords:
+        type: commontypes.maxrecords
+        required: false
+        description: This parameter defines the max records.
+      modifiedafter:
+        type: commontypes.modifiedafter
+        required: false
+        description: This parameter defines the modified after filter
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/ListRanchByRanchFilterResponse.json
+
+
+  /{ranchnbr}:
+    displayName: RanchNumber
+    uriParameters: 
+      ranchnbr: 
+        type: commontypes.ranchnbr
+        required: true
+    get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: Gets the list of ranch on the basis of ranch number.
+      responses: 
+        200:
+          description: Request Processed Successfully
+          body: 
+            application/json:
+              example: !include api/examples/ListRanchResponse.json
+
+/variety:
+  displayName: VarietyDetails 
+  description: Variety transactions 
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: Gets the code variety list on the basis of berrytype and producingarea
+    queryParameters: 
+      berrytype:
+        type: commontypes.berrytype
+        required: false
+        description: This parameter defines the berrytype.
+      producingarea:
+        type: commontypes.producingarea
+        required: false
+        description: This parameter defines the producing area
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/CodeVarietyListResponse.json
+  /{berrytype}:
+    uriParameters: 
+      berrytype: 
+        type: commontypes.berrytype
+        required: true
+    get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: Gets the code variety list on the basis of berrytype
+      responses: 
+        200:
+          description: Request Process Successfully
+          body: 
+            application/json:
+              example: !include api/examples/CodeVarietyListResponse.json
+
+/blocklist:
+  displayName: BlockList 
+  description: Block table transactions
+  post:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+    description: Insert block details
+    body: 
+      application/json:
+        example: !include api/examples/PostBlockRequest.json
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: !include api/examples/StandardResponse.json  
+
+  /{ranchnbr}:
+    displayName: RanchNumber
+    uriParameters: 
+      ranchnbr: 
+        type: commontypes.ranchnbr
+        required: true
+    get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: Gets the block list on the basis of ranch number
+      queryParameters:
+        blocktype:
+          type: commontypes.blocktype
+          required: false
+          description: blocktype is required when there is a filter on block lists
+        variety:
+          type: boolean
+          required: false
+          description: When Variety Description is required
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include api/examples/BlockListByRanchResponse.json
+
+/ranch:
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: Gets ranch details by various filters
+    queryParameters: 
+      status:
+        type: commontypes.status
+        required: false
+        description: Status is thye current status of the ranch example open, closed,etc
+      berrytype:
+        type: commontypes.berrytype
+        required: false
+        description: This parameter defines the berrytype.
+      growingdistrict:
+        type: commontypes.growingdistrict
+        required: false
+        description: This parameter defines the growing district
+      growingregion:
+        type: commontypes.growingregion
+        required: false
+        description: this parameter defines the growing region.
+      producingarea:
+        type: commontypes.producingarea
+        required: false
+        description: This parameter defines the producing area
+      receivingarea:
+        type: commontypes.receivingarea
+        required: false
+        description: This parameter defines the receiving area
+      growergroup:
+        type: commontypes.growergroup
+        required: false
+        description: this parameter defines the grower group.
+      growernbr:
+        type: commontypes.growernbr
+        required: false
+        description: This parameter defines the grower number.
+      masterranchnbr:
+        type: commontypes.masterranchnbr
+        required: false
+        description: This parameter defines the master ranch number
+      ranchnbr:
+        type: commontypes.ranchnbr
+        required: false
+        description:  This parameter defines the ranch number
+      fieldtype:
+        type: commontypes.fieldtype
+        required: false
+        description: This parameter defines the field type
+      plantinggroupyear:
+        type: commontypes.plantinggroupyear
+        required: false
+        description: This parameter defines the planting group year
+      dsainvestment:
+        type: commontypes.dsainvestment
+        required: false
+        description: This parameter defines the dsa investment
+      maxrecords:
+        type: commontypes.maxrecords
+        required: false
+        description: This parameter defines the max records.
+      modifiedafter:
+        type: commontypes.modifiedafter
+        required: false
+        description: This parameter defines the modified after filter
+
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/RanchByRanchFilterResponse.json
+
+
+/listitem:
+  post:
+    is: [commontraits.content-type-required,commontraits.standard-error-responses]
+    description: Post event to get the list of items
+    body: 
+      application/json:
+        example: !include api/examples/listItemRequest.json  
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: !include api/examples/listItemResponse.json
+  /{itemnbr}:
+    uriParameters: 
+      itemnbr: 
+        type: commontypes.itemnbr
+        required: true
+    get:
+      is: [commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Gets the item list on the basis of item number
+      queryParameters:
+        companyid:
+          type: commontypes.companyid
+          required: true
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include api/examples/GetListItemResponse.json
+
+/plantitem:
+  /{itemnbr}:
+    uriParameters: 
+      itemnbr: 
+        type: commontypes.itemnbr
+        required: true
+    get:
+      is: [commontraits.accept-required, commontraits.standard-error-responses ]
+      description: Gets the details for plantitem
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include api/examples/PlantItemResponse.json       
+  post:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+    description: post plant item data
+    body: 
+     application/json:
+       example: !include api/examples/PlantItemDataRequest.json
+    responses: 
+      201:
+       body: 
+         application/json:
+           example: !include api/examples/StandardResponse.json               
+  /attributes:
+    post:
+      is: [commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Post event to get the list of plant items attributes
+      body: 
+        application/json:
+          example: !include api/examples/ListPlantItemRequest.json  
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/ListPlantItemResponse.json
+  /all:
+    get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: Get all plant items data.
+      responses: 
+        200:
+          body: 
+            application/json:
+              example: !include api/examples/AllItemPlantAttributeDataResponse.json
+  /variety:
+    /{berrytypeid}:
+      uriParameters: 
+        berrytypeid: 
+          type: commontypes.berrytypeid
+          required: true
+      get:
+        is: [commontraits.accept-required,commontraits.standard-error-responses]
+        description: Gets variety and varietyCode on the basis of berrytypeid
+        responses: 
+          200:
+            description: Request Process Successfully
+            body: 
+              application/json:
+                example: !include api/examples/VarietiesResponse.json                            
+               
+/growerentity:
+  post:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+    description: Makes an entity to grower entity
+    body: 
+      application/json:
+        example: !include api/examples/GrowerEntityRequest.json
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: !include api/examples/StandardResponse.json
+  put:
+    is: [commontraits.content-type-required,commontraits.accept-required, commontraits.standard-error-responses ]
+    description: Makes an entity to grower entity
+    body: 
+      application/json:
+        example: !include api/examples/GrowerEntityRequest.json
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/StandardResponse.json
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets the entity details on the basis of entity id
+    queryParameters: 
+      growerEntityId:
+        type: commontypes.growerEntityId
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include api/examples/GrowerEntityResponse.json
+      
+
+/productionseason:
+  post:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+    description: Makes an entity to grower entity
+    body: 
+      application/json:
+        example: !include api/examples/ProductionSeasonRequest.json
+    responses: 
+      201:
+        body: 
+          application/json:
+            example: !include api/examples/StandardResponse.json
+  put:
+    is: [commontraits.content-type-required,commontraits.accept-required, commontraits.standard-error-responses ]
+    description: Makes an entity to grower entity
+    body: 
+      application/json:
+        example: !include api/examples/ProductionSeasonRequest.json
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/StandardResponse.json
+      
+/customer:
+  /{customerid}:
+    uriParameters: 
+      customerid: 
+        type: commontypes.customerid
+        required: true
+    get:
+      is: [commontraits.accept-required, commontraits.standard-error-responses ]
+      description: gets customer details on the basis of customer id
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include api/examples/GetCustomerResponse.json
+
+    /shiptodetails:     
+       get:
+        is: [commontraits.accept-required, commontraits.standard-error-responses ]
+        description: gets ship to customer details on the basis of customer id
+        queryParameters:
+          companyid:
+            type: commontypes.companyid
+            required: false
+            description: company Id is required to select the customer
+        responses:
+            200:
+              body:
+                application/json:
+                  example: !include api/examples/GetCustomerResponse.json
+    
+/types:
+   get:
+      is: [commontraits.accept-required,commontraits.standard-error-responses]
+      description: gets all the types
+      responses: 
+        200:
+          description: Request Processed Successfully
+          body: 
+            application/json:
+              example: !include api/examples/GetTypesResponse.json                   
+   post:
+      is: [commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Post Type to the list of types
+      body: 
+        application/json:
+          properties:
+            enAttributeType:
+              type: commontypes.enAttributeType
+              required: true
+            value:
+              type: string
+            CreatedBy:
+              type: string
+          example: !include api/examples/AddTypeRequest.json  
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/StandardResponse.json
+   put:
+      is: [commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Update Type in the list of types
+      body: 
+        application/json:
+          properties:
+            enAttributeType:
+              type: commontypes.enAttributeType
+              required: true
+            OldValue:
+              type: string
+            NewValue:
+              type: string
+            LastChangedBy:
+              type: string
+          example: !include api/examples/UpdateTypeRequest.json  
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/StandardResponse.json
+   /inactive:
+    put:
+      is: [commontraits.content-type-required,commontraits.standard-error-responses]
+      description: mark the row as inactive via a status column
+      body: 
+        application/json:
+          properties:
+            enAttributeType:
+              type: commontypes.enAttributeType
+              required: true
+            value:
+              type: string
+            LastChangedBy:
+              type: string
+            Status: 
+              type: commontypes.Status
+              required: true
+          example: !include api/examples/InactiveTypeRequest.json  
+      responses: 
+        204:
+/itemfootprint:
+  /header:
+    /{type}:
+      uriParameters: 
+        type: 
+          type: commontypes.type
+          required: true
+      get:
+        is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+        description: get itemfootprint header details.
+        responses: 
+          200:
+            body: 
+              application/json:
+                example: !include api/examples/ItemFootprintHeaderResponse.json
+    post:
+      is: [commontraits.accept-required,commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Post itemfootprint header details.
+      body: 
+        application/json:
+          example: !include api/examples/ItemFootprintHeaderRequest.json 
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/StandardResponse.json
+    put:
+      is: [commontraits.accept-required,commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Update IsDefaultFootprint for itemfootprint header details.
+      body: 
+        application/json:
+          example: !include api/examples/UpdateIsdefaultRequest.json
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/StandardResponse.json  
+  /line:
+    /{footprintcode}:
+       uriParameters: 
+        footprintcode: 
+          type: commontypes.footprintcode
+          required: true
+       get:
+        is: [commontraits.accept-required, commontraits.standard-error-responses ]
+        description: gets itemfootprint line details on basis of footprintcode
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include api/examples/ItemFootprintLineResponse.json
+    /{itemid}:
+      uriParameters: 
+        itemid: 
+          type: commontypes.itemid
+          required: true
+      get:
+        is: [commontraits.accept-required, commontraits.standard-error-responses ]
+        description: gets itemfootprint line details on basis of itemid
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include api/examples/ItemFootprintLineResponse.json
+    post:
+      is: [commontraits.accept-required,commontraits.content-type-required,commontraits.standard-error-responses]
+      description: Post itemfootprint line details.
+      body: 
+        application/json:
+          example: !include api/examples/ItemFootprintLineRequest.json 
+      responses: 
+        201:
+          body: 
+            application/json:
+              example: !include api/examples/StandardResponse.json              
+  /itemcode:
+    /{itemtype}:
+      uriParameters: 
+        itemtype: 
+          type: commontypes.itemtype
+          required: true
+      get:
+        is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+        description: get itemcode list details.
+        responses: 
+          200:
+            body: 
+              application/json:
+                example: !include api/examples/ItemCodelistResponse.json           
+/currencyexchange:
+  get:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses ]
+    description: get current exchange rates either all or single by query parameters
+    queryParameters: 
+      exchangetype:
+        type: commontypes.exchangesymbol
+        description: ExchangeSymbol from mdr.
+        required: false
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/CurrencyExchangeResponse.json
+            
+/commodity:
+  displayName: Commodity 
+  description: Commodity table 
+  get:
+    is: [commontraits.content-type-required, commontraits.standard-error-responses,commontraits.pagination]
+    description: get Details for Commodity
+    queryParameters: 
+      commoditycode:
+        type: commontypes.commoditycode
+        description: gets the commodity details on the basis of Commodity Code
+        required: false
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/GetCommodityResponse.json
+
+/timeperiod:
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets the pool week details on the basis of keydate
+    queryParameters: 
+      startdate:
+        type: commontypes.startdate
+        required: false
+      enddate:
+        type: commontypes.enddate
+        required: false
+      daydate:
+        type: commontypes.daydate
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include api/examples/TimePeriodResponse.json   
+            
+/brand:
+  displayName: Brand 
+  description: Brand table transactions
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the Brand list
+    responses: 
+      200:
+        description: Request Processed Successfully
+        body: 
+          application/json:
+            example: !include api/examples/GetBrandResponse.json
+            
+/receivingarea:
+  displayName: Receiving Area 
+  description: ReceivingArea table transactions
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the ReceivingArea list
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/GetReceivingAreaResponse.json
+  
+/planninggroup:
+  displayName: Planning Group 
+  description: PlanningGroup table transactions
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the PlanningGroup list
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/GetPlanningGroupResponse.json
+            
+/producing-warehouse-receivingarea:
+  displayName: Producing Warehouse Receiving Area 
+  description: Producingarea Warehousereceivingarea Receivingarea table transactions
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: fetch the producingarea, receivingarea and warehousereceivingarea details
+    queryParameters:
+      WarehouseNbr:
+        type: commontypes.ranchnbr
+        required: false
+      ReceivingAreaCode:
+        type: commontypes.receivingarea
+        required: false
+      ProducingAreaCode:
+        type: commontypes.producingarea
+        required: false
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/ProducingReceivingWarehouseAreaListResponse.json
+
+/listestimategroup:
+  displayName: Estimate group list 
+  description: Estimate group details
+  get:
+    is: [commontraits.accept-required,commontraits.standard-error-responses]
+    description: gets all the estimate group list
+    responses: 
+      200:
+        body: 
+          application/json:
+            example: !include api/examples/ListEstimateGroupResponse.json

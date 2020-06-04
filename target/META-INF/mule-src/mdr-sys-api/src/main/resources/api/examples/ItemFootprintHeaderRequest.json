@@ -1,0 +1,21 @@
+{
+  "ItemId": "109462",
+  "FootprintCode": "STRAW_8x16OZ_120",
+  "CasesPerLevel": "56",
+  "NestLength": "1.00",
+  "NestWidth": "1.00",
+  "NestHeight": "1.00",
+  "PalletStackHeight": "1.00",
+  "DefaultUnitType": "CHEP",
+  "IsDefaultFootprint": false,
+  "StackMethod": "yes",
+  "LevelUnits": "units",
+  "Blocked": true,
+  "BlockedBy": "nathan.hutchinson@driscolls.com",
+  "BlockedDateTime": "Tue, 03 Sep 2019 17:43:53 GMT",
+  "BlockedReason": "my reason",
+  "CreatedDateTime": "Tue, 03 Sep 2019 17:43:53 GMT",
+  "CreatedBy": "nathan.hutchinson@driscolls.com",
+  "ModifiedDateTime": "",
+  "ModifiedBy": ""
+}

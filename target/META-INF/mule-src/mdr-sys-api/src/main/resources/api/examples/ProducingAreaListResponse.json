@@ -1,0 +1,150 @@
+{
+   "TotalResults":36,
+   "Data":[
+      {
+         "Code":"0001",
+         "Descript":"Watsonville"
+      },
+      {
+         "Code":"0002",
+         "Descript":"Salinas"
+      },
+      {
+         "Code":"0003",
+         "Descript":"Santa Maria"
+      },
+      {
+         "Code":"0004",
+         "Descript":"Oxnard"
+      },
+      {
+         "Code":"0005",
+         "Descript":"Orland"
+      },
+      {
+         "Code":"0006",
+         "Descript":"Purepero"
+      },
+      {
+         "Code":"0007",
+         "Descript":"Zamora"
+      },
+      {
+         "Code":"0008",
+         "Descript":"Oregon"
+      },
+      {
+         "Code":"0009",
+         "Descript":"British Columbia"
+      },
+      {
+         "Code":"0010",
+         "Descript":"Tuxcueca"
+      },
+      {
+         "Code":"0011",
+         "Descript":"Jocotepec"
+      },
+      {
+         "Code":"0012",
+         "Descript":"Western Washington"
+      },
+      {
+         "Code":"0013",
+         "Descript":"Eastern Washington"
+      },
+      {
+         "Code":"0014",
+         "Descript":"Tapalpa"
+      },
+      {
+         "Code":"0015",
+         "Descript":"Los Reyes"
+      },
+      {
+         "Code":"0016",
+         "Descript":"Ziracuaretiro"
+      },
+      {
+         "Code":"0017",
+         "Descript":"Juanacatlan"
+      },
+      {
+         "Code":"0018",
+         "Descript":"Mazamitla"
+      },
+      {
+         "Code":"0019",
+         "Descript":"Arandas"
+      },
+      {
+         "Code":"0020",
+         "Descript":"San Quintin"
+      },
+      {
+         "Code":"0021",
+         "Descript":"Tupataro"
+      },
+      {
+         "Code":"0022",
+         "Descript":"San Joaquin Valley"
+      },
+      {
+         "Code":"0023",
+         "Descript":"Ciudad Guzman"
+      },
+      {
+         "Code":"0024",
+         "Descript":"Central Florida"
+      },
+      {
+         "Code":"0025",
+         "Descript":"Southern Florida"
+      },
+      {
+         "Code":"0026",
+         "Descript":"Georgia"
+      },
+      {
+         "Code":"0027",
+         "Descript":"Eastern North Carolina"
+      },
+      {
+         "Code":"0028",
+         "Descript":"New Jersey"
+      },
+      {
+         "Code":"0029",
+         "Descript":"Tangancicuaro"
+      },
+      {
+         "Code":"0030",
+         "Descript":"Peru"
+      },
+      {
+         "Code":"0031",
+         "Descript":"Chile"
+      },
+      {
+         "Code":"0032",
+         "Descript":"Argentina"
+      },
+      {
+         "Code":"0033",
+         "Descript":"Western New York"
+      },
+      {
+         "Code":"0034",
+         "Descript":"El Seco"
+      },
+      {
+         "Code":"0035",
+         "Descript":"Quebec"
+      },
+      {
+         "Code":"0036",
+         "Descript":"Tala"
+      }
+   ],
+   "Status":"Ok"
+}

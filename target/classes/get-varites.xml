@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-varitesFlow" doc:id="39b4c81b-5fb7-4aae-85ac-813827783d8b" >
+		<min-log:put doc:name="TransactionProperties" doc:id="004618bc-f29a-4cc1-a595-4652b1797b84" value="#[attributes.uriParams.berrytypeid]" key="BerryTypeId" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Logger" doc:id="ad62c3f6-8b81-4c4a-9a48-548dc9b2a354" msg="Start: Flow to get all Varieties" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select" doc:id="63735f4a-07cf-480b-82fd-e3d3a1f7327b" config-ref="mdr_database_config">
+			<db:sql >SELECT DISTINCT Variety,Variety_Name 
+FROM [MDR].[dbo].[ItemPlantAttribute]
+WHERE BerryTypeId = :BerryTypeId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+  BerryTypeId : attributes.uriParams.berrytypeid
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="afba7548-cf68-44ca-a8aa-f8b34b603f78" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"Varieties": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Logger" doc:id="7b1875a2-ed35-43d0-b2c7-f0968d26a262" msg="End: Flow to get all Varieties " transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

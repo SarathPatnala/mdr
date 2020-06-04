@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd">
+
+	<flow name="post-list-itemFlow" doc:id="fd61bad7-efcf-4ce1-b3a3-256a24cc12c1" >
+		<min-log:log doc:name="Log" doc:id="c48ea821-f461-42af-a4e8-ba2b11aeb264" transactionProperties="#[vars.transactionProperties]" msg='#["Start: Flow to get list of items"]'/>
+		<logger level="INFO" doc:name="Start:Logger" doc:id="60851da8-3c53-48b3-b85d-0ba9dade0072" message="Start: Flow to get list of items for : #[payload]"/>
+		<ee:transform doc:name="Create Query" doc:id="e95055a7-8693-4b3a-ae89-dea1e72fdfa9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
+output text/plain
+---
+"SELECT A.ItemNbr AS ItemId, A.LegacyItemNbr AS LegacyItemId, 
+A.Description, A.Family, A.[Type], A.SubType, A.LegacySubType AS LegSubType,
+ISNULL(A.Brand,'') AS Brand, ISNULL(A.EstimateGroup,'') AS EstimateGroup,
+ISNULL(A.BerryType,'None') AS BerryType, ISNULL(A.FieldType,'Na') AS FieldType,
+ISNULL(A.NetWeight,0) AS NetWeight, ISNULL(A.TareWeight,0) AS TareWeight,
+A.UPC, ISNULL(A.IsSerialized,0) AS IsSerialized,
+ISNULL(B.MinSpecWeight,0) AS MinSpecWeight,
+ISNULL(A.OverallStatus,'Open') as OverallStatus,
+ISNULL(A.LegacyItemNbr,'') AS LegacyItemNbr,
+ISNULL(A.LegacySkuType,'') AS LegacySkuType,
+ISNULL(A.LegacySubType,'') AS LegacySubType, 
+ISNULL(A.DefaultUom,'') AS Uom, 
+ISNULL(A.DefaultUom,'') AS UomDescription, 
+A.LastModifiedDateTime  
+FROM AllItem A 
+JOIN AllItemCompany B ON B.ItemNbr=A.ItemNbr" ++
+(if (sizeOf(payload.ItemIds) > 0)( " AND A.ItemNbr IN (" ++  ( payload.ItemIds reduce ((item, acc = "") -> acc ++ "'" ++ (item default "" as String) ++ "',") splitBy "," joinBy "," as String) ++ ") ") else " ")
+ ++
+ (if (payload.Company !=null)( " AND B.company ='"++ (payload.Company as String) ++ "' ") else " ")
+ ++
+
+"LEFT OUTER JOIN AllItemUOMInfo D 
+ON D.ItemNbr=A.ItemNbr 
+WHERE D.IsDefault=1 "]]></ee:set-variable>
+				<ee:set-variable variableName="test" ><![CDATA[%dw 2.0
+output text/plain
+---
+"SELECT A.ItemNbr AS ItemId, A.LegacyItemNbr AS LegacyItemId, 
+A.Description, A.[Type], A.SubType, A.LegacySubType AS LegSubType,
+ISNULL(A.Brand,'') AS Brand, ISNULL(A.EstimateGroup,'') AS EstimateGroup,
+ISNULL(A.BerryType,'None') AS BerryType, ISNULL(A.FieldType,'Na') AS FieldType,
+ISNULL(A.NetWeight,0) AS NetWeight, ISNULL(A.TareWeight,0) AS TareWeight,
+A.UPC, ISNULL(A.IsSerialized,0) AS IsSerialized,
+ISNULL(B.MinSpecWeight,0) AS MinSpecWeight,
+ISNULL(A.OverallStatus,'Open') as OverallStatus,
+ISNULL(A.LegacyItemNbr,'') AS LegacyItemNbr,
+ISNULL(A.LegacySkuType,'') AS LegacySkuType,
+ISNULL(A.LegacySubType,'') AS LegacySubType, 
+ISNULL(A.DefaultUom,'') AS Uom, 
+ISNULL(A.DefaultUom,'') AS UomDescription, 
+A.LastModifiedDateTime  
+FROM AllItem A 
+JOIN AllItemCompany B ON B.ItemNbr=A.ItemNbr" ++
+(if (sizeOf(payload.ItemIds) > 0)( " AND A.ItemNbr IN (" ++  ( payload.ItemIds reduce ((item, acc = "") -> acc ++ "'" ++ (item default "" as String) ++ "',") splitBy "," joinBy "," as String) ++ ") ") else " ")
+ ++
+ (if (payload.Company !=null)( " AND B.company ='"++ (payload.Company as String) ++ "' ") else " ")
+ ++
+
+"LEFT OUTER JOIN AllItemUOMInfo D 
+ON D.ItemNbr=A.ItemNbr 
+WHERE D.IsDefault=1 "]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Fetch List of items from DB" doc:id="ccc3e6f9-5fad-4dc6-9991-df6ee32fe568" config-ref="mdr_database_config">
+			<db:sql >#[vars.query]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Data" doc:id="c5245b3a-7585-4227-9f1d-35cba44e17f6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload) default 0,
+	"Data": payload map {
+		"ItemId": $.ItemId,
+		"Description": $.Description,
+		"ItemType": $.Type,
+		"ItemSubType": $.SubType,
+		"Brand": $.Brand,
+		"Family": $.Family,
+		"EstimateGroup": $.EstimateGroup,
+		"BerryType": $.BerryType,
+		"FieldType": capitalize($.FieldType),
+		"NetWeight": $.NetWeight as String,
+		"TareWeight": $.TareWeight as String,
+		"Upc": $.UPC default "",
+		"IsSerialized": capitalize($.IsSerialized as String),
+		"MinSpecWeight": $.MinSpecWeight as String,
+		"DefaultUom":{
+			"Code": $.Uom,
+			"Descript": $.UomDescription
+		},
+		"LegacyInfo": {
+			"LegacyItemId": $.LegacyItemNbr,
+			"LegacySkuType": $.LegacySkuType,
+			"LegacySubType": $.LegacySubType
+		},
+		"OverallStatus": $.OverallStatus,
+		"LastModified": $.LastModifiedDateTime
+		
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="7019483e-6679-4311-a82a-54a943451a70" msg="End: Flow to get list of items"/>
+	</flow>
+</mule>

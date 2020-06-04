@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getCommodityDetails" doc:id="4a3a331b-bda1-4827-b0a4-804811aa1f66" >
+		<min-log:put doc:name="transaction Properies" doc:id="7d128f79-6e34-4d8d-8c97-7eb8fd6561cc" key="commodity" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start Logger" doc:id="e9614ce4-098b-4937-8051-a7dd9f0b604d" msg=" start: getCommodityDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="4d15f5bd-1e58-46b0-8811-438673856614" >
+			<route >
+				<db:select doc:name="select Query to get all commodity details as list" doc:id="5d262423-a16d-4948-be85-19baa95f4afb" config-ref="MySQL_Config">
+					<db:sql>#[ &quot;SELECT 
+CommodityId,
+CommodityCode,
+CommodityName,
+CreatedBy,
+CreatedDateTime,
+ModifiedBy,
+ModifiedDateTime from MDR.M_Commodity&quot; ++   
+(if((attributes.queryParams.commoditycode) != null)
+ &quot; WHERE CommodityCode  = :CommodityCode &quot;
+ else &quot;&quot;)
+ ++ &quot; ORDER BY CreatedDateTime desc &quot;
+
+ ++ &quot; LIMIT &quot; ++ 
+ (
+	attributes.queryParams.pageSize default 100
+ )
+ ++ &quot; OFFSET &quot; ++ 
+ (
+	((attributes.queryParams.pageSize default &quot;100&quot; as Number) * ((attributes.queryParams.startPage default &quot;1&quot; as Number)-1) ) as String
+ )
+ ]
+
+</db:sql>
+			<db:input-parameters><![CDATA[#[{
+ 
+ "CommodityCode" : attributes.queryParams.commoditycode
+ 
+ }]]]></db:input-parameters>
+				</db:select>
+			</route>
+			<route >
+				<db:select doc:name="execute query to retrieve No Of Commodity" doc:id="7a670b71-f185-41f4-ae9d-104e93207ed3" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT 
+Count(CommodityId) AS RowCount from MDR.M_Commodity&quot; ++   
+(if((attributes.queryParams.commoditycode) != null)
+ &quot; WHERE CommodityCode  = :CommodityCode &quot;
+ else &quot;&quot;)
+]
+</db:sql>
+			<db:input-parameters><![CDATA[#[{
+ 
+ "CommodityCode" : attributes.queryParams.commoditycode
+ 
+ }]]]></db:input-parameters>
+		</db:select>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="transform scatter gather output" doc:id="128029e7-a4f3-446b-83c4-20f42d89502c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload."0".payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="resultCount"><![CDATA[%dw 2.0
+output application/json
+---
+payload."1".payload.RowCount[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="sort by commodity code" doc:id="61d624ce-12df-4f9e-aa51-b75229729663" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if (vars.queryParams.sortorder == 1) (payload orderBy $.CommodityCode
+) else payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="response payload" doc:id="bca6569b-4194-42ca-b845-d3a8a97cb455" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(sizeOf(payload) > 0) {
+	"Results":payload,
+	"ResultCount":vars.resultCount
+}
+ else 
+{
+	"Message" : "Record Not Found"
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end Logger" doc:id="5449fe9f-2ea5-45a1-b680-6780b1719e09" msg="end : getCommodityDetails" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

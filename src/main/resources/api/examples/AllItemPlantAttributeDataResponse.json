@@ -1,0 +1,24 @@
+[
+  {
+  	"ItemId": 4651,
+	"ItemNbr" : 109192,
+	"ItemDescription": "Straw Plug Green 108AC177 Conv Finished Goods",
+	"BerryTypeCode" : "STRAW",
+	"PlantType" : "Plug Green",
+	"VarietyCode" : "VHM",
+	"Variety" : "108AC177",
+	"FieldType" : "Conventional",
+	"InventoryType" : "Finished Goods"
+	},
+	{
+	"ItemId": 5130,
+	"ItemNbr" : 109993,
+	"ItemDescription": "Rasp Long cane RJ0799.3 Org Finished Goods",
+	"BerryTypeCode" : "RASP",
+	"PlantType" : "Long Cane",
+	"VarietyCode" : "VAG",
+	"Variety" : "RJ0799.3",
+	"FieldType" : "Organic",
+	"InventoryType" : "Finished Goods"
+	}
+]	

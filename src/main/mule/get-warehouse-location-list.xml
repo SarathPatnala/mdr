@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getwarehouselocationlistFlow" doc:id="86992cb1-1ae1-43c7-96cd-ff1422e43f8b" >
+		<min-log:log doc:name="Start: Logger" doc:id="660572df-0a59-42ff-a2e3-b43f85a7afc7" msg="Start: Get warehouse location list flow" transactionProperties="#[vars.transactionProperties]"/>
+		<choice doc:name="Choice" doc:id="15e7ee21-9202-4791-8860-02dd12e0dee9" >
+			<when expression="#[vars.dbFlag]">
+				<db:select doc:name="MySql_Warehouse" doc:id="a99327a5-6755-4001-9bf2-5fde0d190a7d" config-ref="MySQL_Config">
+					<db:sql >Select WarehouseNbr, WarehouseName From M_Warehouse;</db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="9059c68b-d345-467f-8cee-17116df4b25c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"Data": payload map {
+		"Code": $.WarehouseNbr,
+		"Descript": $.WarehouseName
+	},
+	"Status": "Ok"
+	
+	
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:select doc:name="Get Warehouse List" doc:id="2548b3c1-ecda-49d3-bcfa-1581d97b5aba" config-ref="mdr_database_config">
+			<db:sql>SELECT A.Name,A.[Description], A.ReceivingArea, ISNULL(A.WarehouseType,'All') AS WarehouseType, ISNULL(A.OwnershipType,'Driscoll') AS OwnershipType, ISNULL(A.OwnerOrganization,'Driscoll') AS OwnerOrganization, ISNULL(A.StreetAddr1,'') AS StreetAddr1, ISNULL(A.StreetAddr2,'') AS StreetAddr2, ISNULL(A.Locality,'') AS Locality, ISNULL(A.AdminArea,'') AS AdminArea, ISNULL(A.PostalCode,'') AS PostalCode, ISNULL(A.Iso3Country,'') AS Iso3Country, ISNULL(A.AddAddrComponents,'') AS AddAddrComponents, ISNULL(A.Latitude,'0') AS Latitude, ISNULL(A.Longitude,'0') AS Longitude, ISNULL(A.OverallStatus,'Open') AS OverallStatus, ISNULL(A.ChepNbr,'') AS ChepNbr, A.LastModifiedDateTime FROM AllWarehouseExtended A ORDER BY A.Name</db:sql>
+		</db:select>
+				<ee:transform doc:name="Format Output" doc:id="bb117e74-63f1-4d81-9dd0-9d9d0a52ea19">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"Data": payload map {
+		"Code": $.Name,
+		"Descript": $.Description
+	},
+	"Status": "Ok"
+	
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="End: Logger" doc:id="d5fbd5bf-b3c6-4e6c-9869-6a2e56d867c8" msg="End: Get warehouse location list flow" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="post-itemfootprint-header-detailsFlow" doc:id="e7b64c9e-fb46-435f-baa8-02203f9aad3b" >
+		<min-log:put doc:name="Put TransactionProperties" doc:id="019cec75-4742-4e3f-a2eb-04849f437b81" key="ItemId" value="#[payload.ItemId]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Log" doc:id="d3387ab8-599e-4585-b8e0-bed6665af995" msg="Start flow to post item footprint header details" transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="Formate Json Data to Insert" doc:id="e0459d74-f088-4b5c-b563-490eff8c75d9" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputJSON" ><![CDATA[%dw 2.0
+output application/java
+---
+(write(payload,'application/json') replace /\n/ with "" ) replace /\s/ with " "]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="b098764d-b108-4caf-b6bf-6155f7527d2c" config-ref="mdr_database_config">
+			<db:sql >{call dbo.spPutItemFootprintHeader(:JSONData, :output, :ItemFootprintId)}</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'JSONData': vars.inputJSON
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="output" />
+				<db:output-parameter key="ItemFootprintId" type="INTEGER" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<min-log:log doc:name="End Log" doc:id="95342290-f6fa-4500-8125-1aec1d3f63e4" msg="End flow to post itemfootprint header details" transactionProperties="#[vars.transactionProperties]" />
+		<set-variable value="201" doc:name="httpStatus" doc:id="51a44ee0-82a4-41a7-ba8b-76d59362ef68" variableName="httpStatus"/>
+		<ee:transform doc:name="Transform Message" doc:id="338e87db-0307-4048-b057-74ca3f70631b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"ItemFootprintId": payload.ItemFootprintId]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

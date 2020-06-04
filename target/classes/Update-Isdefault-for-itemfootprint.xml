@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="update-isdefault-for-itemfootprintheaderFlow" doc:id="cafbdbaf-922a-4b4f-90b4-8d4ba7fcd60b" >
+		<min-log:put doc:name="Put" doc:id="ad39081c-e717-4707-aafb-99ca7d429604" key="ItemId" value="#[payload.ItemId]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="Start Log" doc:id="48e288f4-2663-4bd2-b80a-137aae7bcb3a" msg="Start flow to update IsDefault for Itemfootprint header" transactionProperties="#[vars.transactionProperties]"/>
+		<db:update doc:name="Update" doc:id="9224309e-cb09-41b2-b257-80dcdefd606e" config-ref="mdr_database_config">
+			<db:sql >UPDATE  [MDR].[dbo].[ItemFootprint]
+SET IsDefaultFootprint = 0
+WHERE ItemId=:ItemId and FootprintCode !=:FootprintCode</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+  "ItemId": payload.ItemId,
+  "FootprintCode": payload.FootprintCode
+}]]]></db:input-parameters>
+		</db:update>
+		<set-variable value="201" doc:name="httpStatus" doc:id="006adbe4-37d2-41cf-9cf7-3fcee89c29fb" variableName="httpStatus"/>
+		<ee:transform doc:name="Sucess Message" doc:id="d9896e63-a6bd-412e-a472-47336fe89ca3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{"Message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Log" doc:id="7d0c3a50-7c60-43e2-a804-8029698a05a5" msg="End flow to update IsDefault for Itemfootprint header" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

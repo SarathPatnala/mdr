@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd   http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd      http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd  http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <api-gateway:autodiscovery apiId="${secure::api.id}" flowRef="api-main" doc:name="API Autodiscovery" />
+    <apikit:config name="api-config" raml="api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="api-main">
+        <http:listener path="/${secure::api.base}/*/*" doc:name="Listener" config-ref="api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]" reasonPhrase="#[vars.reasonPhrase]">
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"x-transaction-id" : vars.transactionProperties.'x-transaction-id'
+}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]" reasonPhrase="#[vars.httpReason]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <min-log:new doc:name="TransactionId Generator" doc:id="c7362a45-8c75-4069-9c6c-6e8a5cf4ca27" target="transactionProperties" headers="#[attributes.headers]" />
+        <choice doc:name="Check if clientid exists?" doc:id="b23c7b1e-60cc-40de-880c-05cf2ffaeba9">
+            <when expression="#[vars.transactionProperties['client_id'] == null]">
+                <min-log:put doc:name="Put" doc:id="a935030c-d0b5-4a61-9c0e-8a08eb9b039d" target="transactionProperties" transactionProperties="#[vars.transactionProperties]" key="client_id" value="#[(dw::core::Binaries::fromBase64((attributes.headers.authorization splitBy &quot; &quot;)[1]) splitBy &quot;:&quot;)[0] default &quot;&quot;]" />
+            </when>
+            <otherwise>
+                <logger level="INFO" doc:name="Logger" doc:id="7e8e023f-eb45-4007-b90a-638dff734ef4" message="Processing request for clientid: #[vars.transactionProperties.client_id] and transcation Id: #[vars.transactionProperties.&quot;x-transaction-id&quot;]" />
+            </otherwise>
+        </choice>
+        <ee:transform doc:name="Transform Message" doc:id="45d31cc6-0ed5-4b8a-bae2-eadfb5ef35fd" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="dbFlag" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.requestUri contains ("v2")]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<apikit:router doc:name="APIkit Router" config-ref="api-config" />
+    </flow>
+    <flow name="get:\datalist:api-config">
+        <flow-ref doc:name="getdatalistschemaFlow" doc:id="7541a91c-9fd3-4854-a1b6-6f2ac39617c6" name="getdatalistschemaFlow" />
+    </flow>
+	<flow name="get:\listranch:api-config">
+        <flow-ref doc:name="getlistranchbyranchfilterFlow" doc:id="4a570739-6d6a-4f20-9af9-c49ad6add02c" name="getlistranchbyranchfilterFlow" />
+    </flow>
+    <flow name="get:\producingarea:api-config">
+        <flow-ref doc:name="getproducingarealistFlow" doc:id="11bec8cc-e28c-4447-9980-b3c60a80e6f8" name="getProducingAreaList" />
+    </flow>
+    <flow name="get:\ranch:api-config">
+        <flow-ref doc:name="getranchbyranchfilterFlow" doc:id="2a123b6a-3c6c-4c1d-add5-39266f50037c" name="getranchbyranchfilterFlow" />
+    </flow>
+    <flow name="get:\warehouse:api-config">
+        <flow-ref doc:name="getwarehouselocationlistFlow" doc:id="7feb4f1d-a4c0-49d4-ba74-67319ae30a8a" name="getwarehouselocationlistFlow" />
+    </flow>
+    <flow name="get:\listitem\(itemnbr):api-config" doc:id="c2b5c6f4-b072-4a58-8a55-1b86377bb7f1" >
+		<flow-ref doc:name="getItemByItemNbrFilterFlow" doc:id="2fc93682-38a1-4cff-9f56-5963db833cdf" name="getItemByItemNbrFilterFlow"/>
+	</flow>
+	<flow name="get:\variety\(berrytype):api-config">
+        <flow-ref doc:name="getcodevarietylistFlow" doc:id="ed611266-4b9e-4775-a0f7-cb881284b208" name="getcodevarietylistFlow" />
+    </flow>
+    <flow name="get:\listgrower\(growernbr):api-config">
+        <flow-ref doc:name="getlistgrowerFlow" doc:id="9c467b07-f2ba-4bb5-a436-e1d7dcb0d63b" name="getlistgrowerFlow" />
+    </flow>
+    <flow name="get:\blocklist\(ranchnbr):api-config">
+        <flow-ref doc:name="getblocklistbyranchFlow" doc:id="b78190ea-1a8a-4fe8-afee-5f007f136eb6" name="getblocklistbyranchFlow" />
+    </flow>
+    <flow name="get:\listranch\(ranchnbr):api-config">
+		<flow-ref doc:name="get list ranch" doc:id="06c449ec-555c-42d9-b635-9e28fea2ff97" name="getListRanch" />
+    </flow>
+    <flow name="post:\listitem:api-config">
+        <flow-ref doc:name="post-list-itemFlow" doc:id="c5d89727-65e3-4b3a-bc7c-a28ea135c405" name="post-list-itemFlow" />
+    </flow>
+    <flow name="get:\plantitem\(itemnbr):api-config">
+        <flow-ref doc:name="get-plantitemFlow" doc:id="834d457f-8ff0-4e5c-8751-30c910c17ed3" name="get-plantitemFlow" />
+    </flow>
+    <flow name="post:\plantitem\attributes:api-config">
+        <flow-ref doc:name="post-plant-item-attributesFlow" doc:id="c1cbe351-dcc1-47a1-b5b7-8b8b18f4c977" name="post-plant-item-attributesFlow" />
+    </flow>
+    <flow name="put:\growerentity:api-config">
+        <flow-ref doc:name="update-grower-entityFlow" doc:id="cc788de7-22a9-4bc0-a18a-c930e8a29275" name="update-grower-entityFlow" />
+    </flow>
+    <flow name="post:\growerentity:api-config">
+        <flow-ref doc:name="grower-entityFlow" doc:id="a11c2c1c-740d-4bad-a4ea-9fe1a4ca4c56" name="grower-entityFlow" />
+    </flow>
+    <flow name="post:\productionseason:api-config">
+        <flow-ref doc:name="postproductionseasonflow" doc:id="f09f6b69-8b4b-44dc-b259-4ec654083065" name="postproductionseasonflow" />
+    </flow>
+    <flow name="put:\productionseason:api-config">
+        <flow-ref doc:name="updateproductionseasonflow" doc:id="7501ff8e-433b-4655-aa43-378f464e2134" name="updateproductionseasonflow" />
+    </flow>
+    <flow name="get:\growerentity:api-config">
+        <flow-ref doc:name="get-growerentity-detailsFlow" doc:id="44d2c88d-9873-4765-8936-17e1c0eb5637" name="get-growerentity-detailsFlow" />
+    </flow>
+    <flow name="get:\customer\(customerid):api-config">
+        <flow-ref doc:name="get-customer-detailsFlow" doc:id="bf7de57f-65af-4013-8192-bb5ff8f858a2" name="get-customer-detailsFlow" />
+    </flow>
+    <flow name="get:\customer\(customerid)\shiptodetails:api-config">
+        <flow-ref doc:name="get-shipping-customer-detailsFlow" doc:id="12e863e3-88e7-4e2c-9792-ee5fb9b97f39" name="get-shipping-customer-detailsFlow" />
+    </flow>
+    <flow name="get:\productionseasonId\(productionseason):api-config">
+        <flow-ref doc:name="get-production-season-id" doc:id="84f0e1a3-4741-4c35-992d-fe43bd6ff814" name="get-production-season-id-Flow" />
+    </flow>
+    <flow name="get:\plantitem\all:api-config" doc:id="41ec83dc-06ce-462b-9cee-6b5289332d63">
+        <flow-ref doc:name="get-allplantitem-data" doc:id="0e195cf2-a829-42b6-813c-e9eae4e6cf78" name="get-all-plant-item-dataFlow" />
+    </flow>
+    <flow name="post:\plantitem:api-config" doc:id="3fe8a708-7e83-4747-b9b4-48ee55f25f1c">
+        <flow-ref doc:name="post-plant-item-data" doc:id="d3a0bfae-a9cd-4826-a0af-49a9c0a8c8f3" name="post-plant-item-dataFlow" />
+    </flow>
+    <flow name="get:\types:api-config" doc:id="16921c6b-b3ce-4da4-ba2f-76d6becb0875">
+        <flow-ref doc:name="get-types" doc:id="17afd630-3b79-411e-8658-da1f37f3119d" name="get-typesFlow" />
+    </flow>
+    <flow name="post:\types:api-config" doc:id="5781d530-402b-462f-8fab-dc39962a8ccf">
+        <flow-ref doc:name="post-types" doc:id="2d962c70-fff6-4447-b769-bf09506a75fd" name="post-typeFlow" />
+    </flow>
+    <flow name="put:\types:api-config" doc:id="6ec58c8e-cb2a-49aa-9924-64b194112392">
+        <flow-ref doc:name="update-types" doc:id="a1e8463d-1510-4af6-8597-f758b6ddd7a4" name="update-typeFlow" />
+    </flow>
+    <flow name="put:\types\inactive:api-config" doc:id="ffc461ac-b149-4fbf-b40e-592b1edabbb5">
+        <flow-ref doc:name="update-inactive-type" doc:id="fa195edc-cf4f-448d-85f9-58d108d8dac6" name="update-inactive-typeFlow" />
+    </flow>
+    <flow name="get:\plantitem\variety\(berrytypeid):api-config" doc:id="40bd5759-e920-455d-8aa7-b4328a0d04fc">
+        <flow-ref doc:name="Flow Reference" doc:id="14cd1318-d26d-40d6-b1cc-267bf6009c80" name="get-varitesFlow" />
+    </flow>
+    <flow name="get:\itemfootprint\header\(type):api-config" doc:id="70de2978-4c1a-4b95-862d-79563f9e055d">
+        <flow-ref doc:name="all-footprint-header-details" doc:id="e7e1f051-feda-4182-b0c7-eac2bee8299d" name="get-all-footprint-header-detailsFlow" />
+    </flow>
+    <flow name="get:\itemfootprint\line\(footprintcode):api-config" doc:id="b1bfc6ab-d58b-4299-a2f0-796f9834ea92">
+        <flow-ref doc:name="footprint-line-details-by-footprintcode" doc:id="ea9772f7-f078-4fab-b0e3-3f8c2c4c7e72" name="get-itemfootprint-line-details-by-footprintcodeFlow" />
+    </flow>
+    <flow name="get:\itemfootprint\line\(itemid):api-config" doc:id="1586515d-72e6-440e-87d1-c144ed3f8f40">
+        <flow-ref doc:name="Flow Reference" doc:id="3a0316a5-b8cb-452b-b023-4a7031586b09" name="get-footprint-line-details-by-itemidFlow" />
+    </flow>
+    <flow name="get:\itemfootprint\itemcode\(itemtype):api-config" doc:id="14978500-012d-4ff5-8dd2-daa63e5f5f74">
+        <flow-ref doc:name="itemfootprint-itemcode-list-by-item-type" doc:id="a2c9154e-4335-4709-901c-de3f71ce085a" name="get-itemfootprint-list-of-itemcodes-by-typeFlow" />
+    </flow>
+    <flow name="post:\itemfootprint\line:api-config" doc:id="3eaad6d4-b46f-423c-951c-c85991bc5717">
+        <flow-ref doc:name="post item footprint line details flow" doc:id="d62ed221-f185-4bf9-a080-f2949012fd85" name="post-itemfootprint-line-detailsFlow" />
+    </flow>
+    <flow name="post:\itemfootprint\header:api-config" doc:id="bbfe3075-8f23-4b0c-9681-e1b5c34a24a2">
+        <flow-ref doc:name="post item footprint header details flow" doc:id="f65bdc54-6e80-443b-9f1c-1ce7667778ca" name="post-itemfootprint-header-detailsFlow" />
+    </flow>
+    <flow name="put:\itemfootprint\header:api-config" doc:id="3deba468-1974-49c7-91b9-3a3176fcc570">
+        <flow-ref doc:name="Update IsDefault for Itemfootprint header" doc:id="e4d00e33-3a44-46e2-ac8c-75574c2eefd0" name="update-isdefault-for-itemfootprintheaderFlow" />
+    </flow>
+    <flow name="get:\currencyexchange:api-config">
+        <flow-ref doc:name="get currency exchange Rates" doc:id="4c1ee8da-f88a-4c2f-95e4-ee106d1844be" name="get-currency-exchangeFlow"/>
+    </flow>
+	<flow name="get:\producingarea\(ranchnbr):api-config" doc:id="5ca8ec49-8a67-4b15-a653-d43936196c24">
+		<flow-ref doc:name="getProducingAreaByRanch" doc:id="0c74f48b-8984-465d-abdc-6f44291ba19c" name="getProducingAreaByRanch"/>
+	</flow>
+	<flow name="get:\commodity:api-config" doc:id="92f0bcc6-e5ff-4f69-8af0-e57656911032">
+		<flow-ref doc:name="get commodity details " doc:id="e3640f95-5202-47ea-8cd2-e796b6657c9d" name="getCommodityDetails"/>
+	</flow>
+	<flow name="post:\blocklist:api-config" doc:id="21463bed-b7a9-4d13-ab52-9f3f928e153c">
+		<flow-ref doc:name="post block details" doc:id="43835873-8594-4970-9dca-d73068cba7d0" name="postBlockDetails"/>
+	</flow>
+		<flow name="get:\timeperiod:api-config" doc:id="bdb407b9-b85e-4535-adf9-3dd28a5dc2b8">
+		<flow-ref doc:name="get timeperiod details" doc:id="1c055c07-79f3-4818-b802-d685c83a1766" name="getTimeperiodDetails"/>
+	</flow>
+	<flow name="get:\variety:api-config" doc:id="50411d53-5755-49f7-859e-480162446311">
+		<flow-ref doc:name="get variety details" doc:id="8d744dd9-10d6-4db7-b732-cdbac3a668d7" name="getVarietyDetails"/>
+	</flow>
+		<flow name="get:\brand:api-config" doc:id="ca0747eb-0a55-4004-af3a-818c15dcbf34">
+		<flow-ref doc:name="get brand details" doc:id="db4307d4-6df5-4b33-916c-52693d16dfbd" name="getBrandDetails"/>
+	</flow>
+		<flow name="get:\receivingarea:api-config" doc:id="a6ef3dcf-3982-4a60-8942-1b4d91cb81fa">
+		<flow-ref doc:name="get receivingarea details" doc:id="73147c48-f02d-4bbf-ac08-4907557771d3" name="getReceivingareaDetails"/>
+	</flow>
+		<flow name="get:\planninggroup:api-config" doc:id="d1d1783c-f0f4-4544-8a2a-c93aabfc31a2">
+		<flow-ref doc:name="get planninggroup details" doc:id="a99fe11b-e00d-41ec-a735-efcc7dd29adc" name="getPlanninggroupDetails"/>
+	</flow>
+	    <flow name="get:\producing-warehouse-receivingarea:api-config" doc:id="01ff1f6a-fe65-4f13-b8ce-842d895d5049">
+		<flow-ref doc:name="get producing receiving warehousereceivingarea details" doc:id="e1eae85f-f833-431f-8171-f450c71469cc" name="get-Producing-Receiving-WarehouseReceivingareaDetails"/>
+	</flow>
+		<flow name="get:\listestimategroup:api-config" doc:id="0868aa3b-7918-4280-bf20-1866d055db71">
+		<flow-ref doc:name="get estimate group details" doc:id="d6cbc96a-58a4-480f-b4c8-78cebfabdbd4" name="getEstimategrouplist"/>
+	</flow>
+</mule>

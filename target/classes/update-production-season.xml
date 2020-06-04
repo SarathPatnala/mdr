@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="updateproductionseasonflow" doc:id="16d462b2-a62a-40c2-b9b8-c09b57e13fa2" >
+		<min-log:log doc:name="Start: Logger" doc:id="5757e3f1-a2cf-4611-8770-d4c7931b4790" msg="Starting: flow to update production season" transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="Format JSON Data for Insert" doc:id="8de2737c-361b-47c5-bae2-3bf90f3e0922" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="inputJSON" ><![CDATA[%dw 2.0
+output application/java
+---
+(write(payload,'application/json') replace /\n/ with "" ) replace /\s/ with ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<min-log:put doc:name=" Put" doc:id="69d2f2fb-d277-4004-bb92-6004a81200ae" key="ProductionSeasonName" value="#[payload.ProductionSeasonName]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<db:stored-procedure doc:name=" Execute Stored Procedure" doc:id="bd46adf0-56c2-4860-8f85-5da7da9bf3c1" config-ref="mdr_database_config" >
+			<db:sql >{call dbo.spPutProductionSeason(:JSONData, :output)}</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'JSONData': vars.inputJSON
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="output" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<ee:transform doc:name="Transform Message" doc:id="e269cf04-e8b3-40a5-8df0-58ec094bb8f6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{"message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="41e59aa5-5a0a-4d6c-9476-a13fa041d6ff" msg="End: flow to update production season" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

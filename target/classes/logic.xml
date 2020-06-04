@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd">
+
+	<flow name="put:\ping:api-config">
+		<min-log:put doc:name="Put" doc:id="0a392ad2-ad24-476a-b43c-78265afcfc33" key="Ping-Put" value="put-method" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:timed doc:name="Timed" doc:id="89e84fa8-8c3e-4c8a-9297-3c800a82e71b" transactionProperties="#[vars.transactionProperties]">
+			<set-payload value='{
+		  "status": "200",
+		  "message": "Alive"
+		}' doc:name="Set Payload" doc:id="14191000-24be-4046-9277-43cefc2614b3" mimeType="application/json" />
+		</min-log:timed>
+		<min-log:log doc:name="Log" doc:id="143104e4-6955-4432-bd13-8717fd3128c1" msg="Put Ping flow Logger" transactionProperties="#[vars.transactionProperties]"/>
+		
+	</flow>
+
+	<flow name="get:\ping:api-config">
+		<ee:transform doc:name="PingResponse" doc:id="6f7c7508-8d2e-42dd-a2aa-6b67795dda61" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import dwscripts::CommonFunc as call
+---
+{
+	TimeStamp: call::formatDate(now()),
+	AppName: p('secure::ping.application.name'),
+	AppVersion: p('secure::ping.application.version')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</flow>
+
+</mule>

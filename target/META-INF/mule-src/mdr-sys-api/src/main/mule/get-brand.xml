@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getBrandDetails" doc:id="7d54266d-ab52-41fa-ba35-ed669109f4d4" >
+		<min-log:put doc:name="transaction Properies" doc:id="b88150d6-00fc-4a42-bd33-8e4785c105d9" key="brand" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="af63d096-d8c1-4d6c-bfd1-10e000d84afe" msg="start: getBrandDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="get brand details" doc:id="5c07c65a-32ed-4872-b8c8-729067d99997" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT Brand FROM MDR.M_Brand WHERE IsActive = 1&quot;]
+</db:sql>
+		</db:select>
+		<ee:transform doc:name="response Payload" doc:id="bebb6c2c-bc76-4609-a84e-423b18f539f7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload map {
+        "Descript": $.Brand
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="fc822cd2-f887-4a09-9973-0e8371c0d136" msg="end: getBrandDetails" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

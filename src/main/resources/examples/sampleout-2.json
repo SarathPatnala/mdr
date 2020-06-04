@@ -1,0 +1,173 @@
+{
+  "SchemaName": "LciDataLists",
+  "DataLists": [
+    {
+      "PropName": "BerryType",
+      "DefaultCode": "RASP",
+      "DataList": [
+        {
+          "Code": "STRAW",
+          "Value": "STRAW"
+        },
+        {
+          "Code": "BLACK",
+          "Value": "BLACK"
+        },
+        {
+          "Code": "RASP",
+          "Value": "RASP"
+        },
+        {
+          "Code": "BLUE",
+          "Value": "BLUE"
+        }
+      ]
+    },
+    {
+      "PropName": "Variety",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "Maravilla",
+          "Value": "Maravilla"
+        },
+        {
+          "Code": "Sunshine",
+          "Value": "Sunshine"
+        },
+        {
+          "Code": "Esperanza",
+          "Value": "Esperanza"
+        },
+        {
+          "Code": "Jasmine",
+          "Value": "Jasmine"
+        },
+        {
+          "Code": "RH740.1",
+          "Value": "RH740.1"
+        },
+        {
+          "Code": "Advanced Selection",
+          "Value": "Advanced Selection"
+        }
+      ]
+    },
+    {
+      "PropName": "FieldType",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "Organic",
+          "Value": "Organic"
+        },
+        {
+          "Code": "Conventional",
+          "Value": "Conventional"
+        },
+        {
+          "Code": "Transitional",
+          "Value": "Transitional"
+        }
+      ]
+    },
+    {
+      "PropName": "Treatment",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "New Planting - roots",
+          "Value": "New Planting - roots"
+        },
+        {
+          "Code": "New Planting  - frozen tp",
+          "Value": "New Planting  - frozen tp"
+        },
+        {
+          "Code": "New planting - fresh tp",
+          "Value": "New planting - fresh tp"
+        },
+        {
+          "Code": "Mowdown",
+          "Value": "Mowdown"
+        },
+        {
+          "Code": "Store mowdown",
+          "Value": "Store mowdown"
+        },
+        {
+          "Code": "Green cutback",
+          "Value": "Green cutback"
+        }
+      ]
+    },
+    {
+      "PropName": "UnitSize",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "5L",
+          "Value": "5L"
+        },
+        {
+          "Code": "7L",
+          "Value": "7L"
+        },
+        {
+          "Code": "7.5L",
+          "Value": "7.5L"
+        },
+        {
+          "Code": "10L",
+          "Value": "10L"
+        }
+      ]
+    },
+    {
+      "PropName": "TermLength",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "Short-Term",
+          "Value": "Short-Term"
+        },
+        {
+          "Code": "Long-Term",
+          "Value": "Long-Term"
+        }
+      ]
+    },
+    {
+      "PropName": "ReasonCode",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "Plant Health",
+          "Value": "Plant Health"
+        },
+        {
+          "Code": "Physical Handling",
+          "Value": "Physical Handling"
+        },
+        {
+          "Code": "Bin Integrity",
+          "Value": "Bin Integrity"
+        },
+        {
+          "Code": "Other",
+          "Value": "Other"
+        }
+      ]
+    },
+    {
+      "PropName": "EditReasonCode",
+      "DefaultCode": "",
+      "DataList": [
+        {
+          "Code": "Error Correction",
+          "Value": "Error Correction"
+        }
+      ]
+    }
+  ]
+}

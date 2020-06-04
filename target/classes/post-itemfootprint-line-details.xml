@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="post-itemfootprint-line-detailsFlow" doc:id="e1ed09d4-9eb4-45de-9499-4448eb0ebff5" >
+		<min-log:put doc:name="Put TransactionProperties" doc:id="3b1f1648-2048-401b-a1e8-9135722cd973" key="ItemFootprintId" value="#[payload.ItemFootprintId]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Log" doc:id="60408025-4637-4d27-8746-f95c98a254ce" msg="Start flow to insert ItemFootprint Line Details" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select" doc:id="98d8d529-8a96-41a4-964a-4727205aebe0" config-ref="mdr_database_config" target="recordsInTable">
+			<db:sql>SELECT * FROM [MDR].[dbo].[ItemFootprintDetail]
+WHERE ItemFootprintId = :ItemFootprintId AND UnitOfMeasureLevel = :UnitOfMeasureLevel</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"ItemFootprintId" : payload.ItemFootprintId,
+	"UnitOfMeasureLevel" : payload.UnitOfMeasureLevel 
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="1e065089-c3b0-4bae-8ff2-26d605d86221" >
+			<when expression="#[sizeOf(vars.recordsInTable) &gt; 0]">
+				<ee:transform doc:name="Message" doc:id="3eb01bc0-bd41-4417-919e-5d910ec4d563" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+{"Message": "Record not Processed. Duplicate record found."}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:insert doc:name="Insert" doc:id="39ba2589-d047-4356-b732-8d0e9ae1d549" config-ref="mdr_database_config">
+					<db:sql >INSERT INTO dbo.ItemFootprintDetail
+(  ItemFootprintId
+  ,UnitOfMeasure 
+  ,UnitOfMeasureLevel
+  ,Length
+  ,Width
+  ,Height
+  ,GrossWeight
+  ,NetWeight 
+  ,IsPallet
+  ,IsLayer
+  ,IsCase
+  ,IsPackageUOM
+  ,IsStockUOM
+  ,IsReceiveUOM
+  ,UnitQuantity
+  ,IsCartonized
+  ,IsCartonDist 
+  ,Threshold
+  ,IsBulkPick
+  ,ItemId 
+  ,FootprintCode )
+VALUES
+	(  :ItemFootprintId
+  ,:UnitOfMeasure 
+  ,:UnitOfMeasureLevel
+  ,:Length
+  ,:Width
+  ,:Height
+  ,:GrossWeight
+  ,:NetWeight 
+  ,:IsPallet
+  ,:IsLayer
+  ,:IsCase
+  ,:IsPackageUOM
+  ,:IsStockUOM
+  ,:IsReceiveUOM
+  ,:UnitQuantity
+  ,:IsCartonized
+  ,:IsCartonDist 
+  ,:Threshold
+  ,:IsBulkPick
+  ,:ItemId 
+  ,:FootprintCode )</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+		 "ItemFootprintId" : payload.ItemFootprintId,
+		 "UnitOfMeasure" : payload.UnitOfMeasure,
+		 "UnitOfMeasureLevel" : payload.UnitOfMeasureLevel,
+		 "Length": payload.Length,
+		 "Width" : payload.Width,
+		 "Height" : payload.Height,
+		 "GrossWeight" : payload.GrossWeight,
+		 "NetWeight" : payload.NetWeight, 
+		 "IsPallet" : payload.IsPallet,
+		 "IsLayer" : payload.IsLayer,
+		 "IsCase" : payload.IsCase,
+		 "IsPackageUOM" : payload.IsPackageUOM,
+		 "IsStockUOM" : payload.IsStockUOM,
+		 "IsReceiveUOM" : payload.IsReceiveUOM,
+		 "UnitQuantity" : payload.UnitQuantity,
+		 "IsCartonized": payload.IsCartonized,
+		 "IsCartonDist" : payload.IsCartonDist,
+		 "Threshold" : payload.Threshold,
+		 "IsBulkPick" : payload.IsBulkPick,
+		 "ItemId" : payload.ItemId,
+		 "FootprintCode" : payload.FootprintCode
+}]]]></db:input-parameters>
+				</db:insert>
+				<set-variable value="201" doc:name="httpStatus" doc:id="6fa2a017-a709-4138-9f46-dbd97de1799b" variableName="httpStatus" />
+				<ee:transform doc:name="Sucess Message" doc:id="947ad606-d98e-45e8-95de-91814ab0bb6c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"Message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="End Log" doc:id="027556dc-5af2-43b6-b980-1fae51b43f25" msg="End flow to insert ItemFootprint Line details " transactionProperties="#[vars.transactionProperties]" />
+	</flow>
+</mule>

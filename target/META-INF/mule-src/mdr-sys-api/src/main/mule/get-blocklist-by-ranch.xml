@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getblocklistbyranchFlow" doc:id="8bbe534d-0827-4c67-aa6e-bef0353b7bf7" >
+		<min-log:put doc:name="transaction Properies" doc:id="64786ca8-b9f1-476f-ad8f-a40cb21e1ec7" key="RanchNumber" value="#[attributes.uriParams.ranchnbr]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties" />
+		<min-log:log doc:name="start: Logger" doc:id="7c8f39a5-e16b-4e46-93b6-63a0f8fa17e1" msg='#["start: getblocklistbyranchFlow:  " ++ vars.transactionProperties.RanchNumber]' transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="set QueryParam variables" doc:id="d625de3d-551c-43ac-b4bb-847a2b4dafa4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="blocktype"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.blocktype]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="6b55d915-9915-4655-8c5c-0aaed67c72ed" >
+			<when expression="#[vars.dbFlag]">
+				<db:select doc:name="get ranch details from mdr aws" doc:id="f2771cc9-a50f-429b-87cd-fc50a2901c9f" targetValue="#[payload[0]]" target="ranchData" config-ref="MySQL_Config">
+					<db:sql >#[&quot;Select R.RanchNbr,
+R.RanchName,
+G.GrowerNbr,
+G.GrowerName,
+F.FieldType,
+P.ProducingAreaCode as ProducingArea,
+P.ProducingAreaName,
+R.CommodityCode as BerryType
+From MDR.M_Ranch R join MDR.M_Grower G on R.GrowerNbr = G.GrowerNbr
+join MDR.M_FieldType F on F.FieldTypeId = R.FieldTypeId
+join MDR.M_ProducingArea P on P.ProducingAreaCode = R.ProducingAreaCode WHERE R.RanchNbr = :ranchNbr&quot;]</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	ranchNbr: attributes.uriParams.ranchnbr
+}]]]></db:input-parameters>
+				</db:select>
+				<db:select doc:name="get block details from mdr aws" doc:id="f7561928-cadd-4abb-a68e-6e78d24c8ca4" config-ref="MySQL_Config">
+					<db:sql >#[&quot;SELECT B.BlockType, B.BlockDesignator 
+FROM M_Block B JOIN M_Ranch R ON R.RanchNbr = B.RanchNumber
+where B.OverallStatus = 'Open' AND R.RanchNbr = '&quot;++ vars.transactionProperties.RanchNumber ++ &quot;'&quot;  ++ if (vars.blocktype != null) &quot;AND B.BlockType = '&quot; ++ vars.blocktype ++ &quot;'&quot; else '']</db:sql>
+				</db:select>
+				<ee:transform doc:name="block details Payload" doc:id="1303bc60-de08-4431-b904-fbf764f98bc6" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="blocks" ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (master) -> using (des = master.BlockDesignator){
+	"BlockDesignator": des,
+	"BlockType": master.BlockType,
+	"Status": "Open"
+	
+}  ]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:select doc:name="Fetch Ranch Details from Database" doc:id="8dee1178-124f-4852-9061-1dca7d2f1647" config-ref="mdr_database_config" target="ranchData" targetValue="#[payload[0]]">
+			<db:sql>#[&quot;SELECT 	TrnsRanchNbr AS RanchNbr, 
+		MstrRanchNbr AS MasterRanchNbr, 
+		MstrRanchName AS MasterRanchName, 
+		[TrnsRanchName] AS RanchName,
+		[FieldType], 
+		ISNULL([ParcelNbr], '') AS ParcelNbr, 
+		ISNULL(IsOrganic,0) AS IsOrganic,
+		ISNULL(IsApproved,0) AS IsApproved, 
+		ISNULL(ApprovalDate,CONVERT(Datetime, '01/01/1941', 120)) AS ApprovalDate, 
+		ISNULL(ApprovedBy,'') AS ApprovedBy, 
+		ISNULL([CertificationAgency],'') AS CertificationAgency,
+		ISNULL([CDFANbr],'') AS CDFANbr, 
+		ISNULL(DefaultReceivingAreaCode,'') AS ReceivingArea, 
+		ISNULL(ProducingAreaCode,'') AS ProducingArea,
+		ISNULL(ProducingAreaDescription,'') AS ProducingAreaName,
+		ISNULL([CustomerInfo], '') AS CustomerInfo, 
+		ISNULL([Mid], '') AS Mid, 
+		ISNULL([MidAlias],'') AS MidAlias, 
+		ISNULL([BusModelGroup], '') AS BusModelGroup, 
+		ISNULL([Acres], 0) AS Acres, 
+		ISNULL(ProducingAcres,0) AS ProducingAcres,
+		ISNULL(StreetAddr1,'') AS StreetAddr1,
+		ISNULL(StreetAddr2,'') AS StreetAddr2, 
+		ISNULL(Locality,'') AS Locality, 
+		ISNULL(AdminArea,'') AS AdminArea, 
+		ISNULL(PostalCode,'') AS PostalCode, 
+		ISNULL(Iso3Country,'') AS Iso3Country, 
+		ISNULL(AddAddrComponents,'') AS AddAddrComponents, 
+		ISNULL([Latitude], '0') AS Latitude, 
+		ISNULL([Longitude],'0') AS Longitude, 
+		ISNULL([VendorAcctNumber], '') AS VendorAcctNumber, 
+		ISNULL([CustomerAcctNumber], '') AS CustomerAcctNumber,
+		[OverallStatus], 
+		BerryType, 
+		TrnsGrowerNbr AS GrowerNbr, 
+		TrnsGrowerName AS GrowerName, 
+		GrowerGroup, 
+		GrowingDistrictCode AS GrowingDistrict, 
+		GrowingRegionCode AS GrowingRegion, 
+		ISNULL(PlantingGroupYear,'') AS PlantingGroupYear, 
+		ISNULL(DsaInvestment,'') AS DsaInvestment, 
+		ISNULL(IsoTransitionDate, CONVERT(Datetime, '01/01/1941', 120)) AS OrganicTransitionDate, 
+		LastModifiedDateTime            FROM AllTrnsRanchExtended WHERE TrnsRanchNbr = '&quot; ++ vars.transactionProperties.RanchNumber++ &quot;'&quot;]</db:sql>
+		</db:select>
+				<flow-ref doc:name="Call Flow Fetch Blocks With Attributes" doc:id="1906d9ba-ea4e-4767-8686-baad6e158bab" name="FetchBlocksWithAttributesWithVarietyDesc" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="response Payload" doc:id="d0240afd-098b-4350-af80-e3960e51295e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+{   
+	"RanchNbr": vars.ranchData.RanchNbr,
+    "Name": vars.ranchData.RanchName,
+    "GrowerNbr": vars.ranchData.GrowerNbr,
+    "GrowerName": vars.ranchData.GrowerName,
+    "ProducingArea": vars.ranchData.ProducingArea,
+    "ProducingAreaName": vars.ranchData.ProducingAreaName,
+    "BerryType": capitalize(vars.ranchData.BerryType),
+    "FieldType": capitalize(vars.ranchData.FieldType),
+    "Blocks": vars.blocks,
+    ("CDFANbr": vars.blockAttributes.CDFANbr[0]) if (vars.dbFlag==false)
+
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="c7c9a8f4-341f-40f5-a837-c12e43f06a6d" msg='#["end: getblocklistbyranchFlow:  " ++ vars.transactionProperties.RanchNumber]' transactionProperties="#[vars.transactionProperties]" />
+	
+</flow>
+	<sub-flow name="FetchBlocksWithAttributesWithVarietyDesc" doc:id="abd73f3d-11dc-4952-a70a-9b1b15496ae4" >
+		<db:select doc:name="Fetch Attributes From Database" doc:id="44f3be3b-9606-438b-893c-2c5ef452f4b1" config-ref="mdr_database_config">
+			<db:sql>#[&quot;SELECT A.TrnsRanchNbr, A.DSABlockDesig, A.BlockType, A.OverallStatus,  ISNULL(C.[CDFANbr],'') AS CDFANbr,B.AttribName, CASE WHEN D.CommonName IS NULL THEN B.AttribValue ELSE D.CommonName END AS AttribValue 
+FROM AllTrnsRanchBlock A JOIN AllTrnsRanchBlockAttrib B ON B.TrnsRanchNbr = A.TrnsRanchNbr and  B.DSABlockDesig = A.DSABlockDesig LEFT OUTER JOIN AllVariety D ON D.VarietyCode = B.AttribValue JOIN AllTrnsRanchExtended C on A.TrnsRanchNbr  = C.TrnsRanchNbr 
+where A.TrnsRanchNbr ='&quot; ++ vars.transactionProperties.RanchNumber ++ &quot;'&quot;]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Format Attributes" doc:id="d933ab5f-9d3d-420b-be63-511313fb4700">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="blockAttributes" ><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	
+		"DSABlockDesig": $.DSABlockDesig,
+		"AttribName": $.AttribName,
+        "AttribValue": $.AttribValue,
+        "CDFANbr":$.CDFANbr	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Fetch BLock from Database" doc:id="bb39c8f4-ac26-4ce3-8c67-bdcaebe70b13" config-ref="mdr_database_config">
+			<db:sql >#[&quot;SELECT A.TrnsRanchNbr, A.BlockType, A.DSABlockDesig AS DSABlockDesignator, A.OverallStatus 
+FROM AllTrnsRanchBlock A JOIN AllTrnsRanchExtended C ON C.TrnsRanchNbr = A.TrnsRanchNbr 
+where A.OverallStatus = 'Open' AND A.TrnsRanchNbr = '&quot;++ vars.transactionProperties.RanchNumber ++ &quot;'&quot;  ++ if (vars.blocktype != null) &quot;AND A.BlockType = '&quot; ++ vars.blocktype ++ &quot;'&quot; else '']</db:sql>
+		</db:select>
+		<ee:transform doc:name="Merge Block and Attributes" doc:id="9916d1f2-9324-436e-8297-5a49dbe77547" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="blocks" ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (master) -> using (des = master.DSABlockDesignator){
+	"BlockDesignator": des,
+	"BlockType": master.BlockType,
+	"Attribs":(vars.blockAttributes filter ($.*DSABlockDesig contains des) map (sub)->{
+		"AttribName": sub.AttribName,
+         "AttribValue": sub.AttribValue
+	}),
+	"Status": "Open"
+	
+}  ]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>

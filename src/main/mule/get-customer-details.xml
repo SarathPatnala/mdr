@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-customer-detailsFlow" doc:id="63be85f9-8b77-4160-9136-fedd6dd77462" >
+		<min-log:put doc:name="Put" doc:id="edd71ee0-3f87-462d-aaad-d2d1576e8850" key="customerId" value="#[attributes.uriParams.customerid]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]" />
+		<min-log:log doc:name="Start: Logger" doc:id="09d3794e-f39c-40b5-ae58-aaf646766336" msg='#["Start: Get Details for Customer Id:  " ++ vars.transactionProperties.customerId]' transactionProperties="#[vars.transactionProperties]" />
+		<db:select doc:name="Select data from database" doc:id="2180d347-1b67-4b3f-8cf2-c5742d147df1" config-ref="mdr_database_config">
+			<db:sql >	SELECT BillToCustomerNbr,
+	BillToCustomerName,
+	BillToStreetAddress,
+	BillToLocality,
+	BillToAdministrativeArea,
+	BillToPostalCode,
+	BillToISO3Country,
+	BillToAddAddrComponents,
+	ShipToCustomerNbr,
+	ShipToCustomerName,
+	ShipToStreetAddress,
+	ShipToLocality,
+	ShipToAdministrativeArea,
+	ShipToPostalCode,
+	ShipToISO3Country,
+	ShipToAddAddrComponents,
+	IsCategoryManaged
+	FROM dbo.AllCustomer
+	WHERE BillToCustomerNbr = :CustomerId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	CustomerId: vars.transactionProperties.customerId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="6c9b9b2a-eab6-4eba-8fc4-24b310442906" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+   "BillToCustomer":{
+      "CustomerNbr": payload[0].BillToCustomerNbr,
+      "CustomerName": payload[0].BillToCustomerName,
+      "Address":{
+         "StreetAddress":payload[0].BillToStreetAddress,
+         "Locality": payload[0].BillToLocality,
+         "AdministrativeArea":payload[0].BillToAdministrativeArea,
+         "PostalCode":payload[0].BillToPostalCode,
+         "Iso3Country": payload[0].BillToISO3Country,
+         "AdditionalComponents": payload[0].BillToAddAddrComponents default "",
+         "FormattedAddress":""
+      },
+      "Country": payload[0].BillToISO3Country,
+      "IsCategoryManaged": payload[0].IsCategoryManaged
+   },
+   "ShipToCustomer":{
+      "CustomerNbr": payload[0].ShipToCustomerNbr,
+      "CustomerName": payload[0].ShipToCustomerName,
+      "Address":{
+         "StreetAddress": payload[0].ShipToStreetAddress,
+         "Locality": payload[0].ShipToLocality,
+         "AdministrativeArea": payload[0].ShipToAdministrativeArea,
+         "PostalCode":payload[0].ShipToPostalCode,
+         "Iso3Country": payload[0].ShipToISO3Country,
+         "AdditionalComponents": payload[0].ShipToAddAddrComponents default "",
+         "FormattedAddress":""
+      },
+      "Country": payload[0].ShipToISO3Country,
+      "IsCategoryManaged": payload[0].IsCategoryManaged
+   }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="19576784-8603-4f99-86ad-a4ee6413a2ca" msg='#["End: Get Details for Customer Id:  " ++ vars.transactionProperties.customerId]' transactionProperties="#[vars.transactionProperties]" />
+	</flow>
+
+<flow name="get-shipping-customer-detailsFlow" doc:id="1c96389c-4347-44c2-9fe8-d39480941a4b" >
+		<min-log:put doc:name="shipCustomerId" doc:id="6ad8ee1a-558a-42f7-a858-77ba2aa605f0" key="shipCustomerId" value="#[attributes.uriParams.customerid]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]" />
+		<min-log:put doc:name="companyId" doc:id="557e9513-b788-498b-b021-dc4515e3ecbf" transactionProperties="#[vars.transactionProperties]" key="companyId" value='#[attributes.queryParams["companyid"]]' target="transactionProperties"/>
+		<min-log:log doc:name="Start: Logger" doc:id="7180bf94-a99c-443c-9f0d-8845833b8fb3" msg='#["Start: Get Details for shipping Customer Id:  " ++ vars.transactionProperties.shipCustomerId]' transactionProperties="#[vars.transactionProperties]" />
+		<db:select doc:name="Select data from Mdr database" doc:id="bb43383c-ad9e-4c90-8a2b-474e8372b960" config-ref="mdr_database_config">
+			<db:sql >	SELECT BillToCustomerNbr,
+	BillToCustomerName,
+	BillToStreetAddress,
+	BillToLocality,
+	BillToAdministrativeArea,
+	BillToPostalCode,
+	BillToISO3Country,
+	BillToAddAddrComponents,
+	ShipToCustomerNbr,
+	ShipToCustomerName,
+	ShipToStreetAddress,
+	ShipToLocality,
+	ShipToAdministrativeArea,
+	ShipToPostalCode,
+	ShipToISO3Country,
+	ShipToAddAddrComponents,
+	IsCategoryManaged
+	FROM dbo.AllCustomer
+	WHERE ShipToCustomerNbr = :CustomerId
+	AND Company = :CompanyId </db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	CustomerId: vars.transactionProperties.shipCustomerId,
+	CompanyId: vars.transactionProperties.companyId
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="e79c8d60-b420-4001-a873-fd6b82a427ee" message='#[if (isEmpty(payload) == false and sizeOf(payload) &gt; 0) "found Ship To Customer" else "Ship To Customer not found"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="13fffa62-50cf-4d03-bade-3a40fe900488" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var curItem = payload[0]
+---
+{
+   "BillToCustomer":{
+      "CustomerNbr": curItem.BillToCustomerNbr,
+      "CustomerName": curItem.BillToCustomerName,
+      "Address":{
+         "StreetAddress":curItem.BillToStreetAddress,
+         "Locality": curItem.BillToLocality,
+         "AdministrativeArea":curItem.BillToAdministrativeArea,
+         "PostalCode":curItem.BillToPostalCode,
+         "Iso3Country": curItem.BillToISO3Country,
+         "AdditionalComponents": curItem.BillToAddAddrComponents default "",
+         "FormattedAddress":""
+      },
+      "Country": curItem.BillToISO3Country,
+      "IsCategoryManaged": curItem.IsCategoryManaged
+   },
+   "ShipToCustomer":{
+      "CustomerNbr": curItem.ShipToCustomerNbr,
+      "CustomerName": curItem.ShipToCustomerName,
+      "Address":{
+         "StreetAddress": curItem.ShipToStreetAddress,
+         "Locality": curItem.ShipToLocality,
+         "AdministrativeArea": curItem.ShipToAdministrativeArea,
+         "PostalCode":curItem.ShipToPostalCode,
+         "Iso3Country": curItem.ShipToISO3Country,
+         "AdditionalComponents": curItem.ShipToAddAddrComponents default "",
+         "FormattedAddress":""
+      },
+      "Country": curItem.ShipToISO3Country,
+      "IsCategoryManaged": curItem.IsCategoryManaged
+   }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="df6b4f7c-3e11-4630-9383-ad31f8844f44" msg='#["End: Get Details for shipping Customer Id:  " ++ vars.transactionProperties.shipCustomerId]' transactionProperties="#[vars.transactionProperties]" />
+	</flow>
+</mule>

@@ -1,0 +1,28 @@
+{
+  "Totalresults": 1,
+  "Data": {
+    "RanchNbr": "0000002",
+    "Name": "Smrburns RASP DSA",
+    "GrowerGroup": "Internal Driscoll",
+    "GrowerNbr": "0992855",
+    "GrowerName": "Driscoll S Operaciones, S.A. de C.V.",
+    "FieldType": "CONVENTIONAL",
+    "ProducingArea": "0020",
+    "ProducingAreaName": "San Quintin",
+    "ReceivingArea": "BJA",
+    "GrowingRegion": "BAJA",
+    "GrowingDistrict": "BAJA",
+    "BerryType": "RASP",
+    "CommodityId": 3,
+    "Acres": "",
+    "ProducingAcres": "",
+    "LatLong": {
+      "Latitude": "31.00000",
+      "Longitude": "-116.00000"
+    },
+    "VendorAcctNbr": "207687",
+    "CustomerAcctNbr": "406152",
+    "OverallStatus": "Open",
+    "LastModified": "2020-03-25T22:22:17"
+  }
+}

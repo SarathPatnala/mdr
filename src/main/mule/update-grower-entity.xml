@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="update-grower-entityFlow" doc:id="20be8710-cd7d-45ca-bb50-a47e6889490a" >
+		<min-log:log doc:name="Start: Logger" doc:id="cfe8cc5a-92b8-4c05-8f2b-895ad7ffceb9" msg="Starting: flow to update  grower entity" transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="Format JSON Data for Insert" doc:id="739dbddd-4981-4407-b6ec-edf3ef1182f7" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="inputJSON" ><![CDATA[%dw 2.0
+output application/java
+---
+(write(payload,'application/json') replace /\n/ with "" ) replace /\s/ with ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<min-log:put doc:name="Put" doc:id="51c16279-a049-4f8b-97c2-668eb4192bb3" key="GrowerEntity" value="#[payload.GrowerEntity]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<db:stored-procedure doc:name="Execute Stored Procedure" doc:id="2e32adef-2772-4c7a-ba4b-e4850516ec5e" config-ref="mdr_database_config" >
+			<db:sql >{call dbo.spPutGrowerEntity(:JSONData, :output)}</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'JSONData': vars.inputJSON
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="output" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<ee:transform doc:name="Transform Message" doc:id="fbe410f9-7c6d-4a39-ad5f-838641d9c4f7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{"message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="223b8d60-1718-454d-8128-e4ea6ac4db44" msg="End: flow to update grower entity" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

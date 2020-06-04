@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-footprint-line-details-by-itemidFlow" doc:id="9ae50569-c5d2-4f6b-8c44-030e3c7a088a" >
+		<min-log:put doc:name="Put" doc:id="a902e88a-4fb6-4c93-89f8-f671f6a057f7" key="ItemId" target="transactionProperties" transactionProperties="#[vars.transactionProperties]" value="#[attributes.uriParams.itemid]"/>
+		<min-log:log doc:name="Start Log" doc:id="ce0eea98-364e-4a40-807c-df13f2592864" msg="Start the flow to get item footprint line details by ItemId" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select" doc:id="3d147452-646e-4c72-928f-94efefb9ca07" config-ref="mdr_database_config">
+			<db:sql >	SELECT ItemFootprintDetailId
+      ,ItemId
+      ,ItemNbr
+      ,ItemFootprintId
+      ,UnitOfMeasure
+      ,UnitOfMeasureLevel
+      ,Length
+      ,Width
+      ,Height
+      ,GrossWeight
+      ,NetWeight
+      ,IsPallet
+      ,IsLayer
+      ,IsCase
+      ,IsPackageUOM
+      ,IsStockUOM
+      ,IsReceiveUOM
+      ,UnitQuantity
+      ,IsCartonized
+      ,IsCartonDist
+      ,Threshold
+      ,IsBulkPick
+      ,FootprintCode
+  FROM MDR.dbo.AllItemFootprintDetail
+  WHERE ItemId = :ItemId</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'ItemId': vars.transactionProperties.ItemId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3cb7407f-3d0a-41d1-8487-2238116f642a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="Log" doc:id="89b1711d-0120-4854-8117-6dd7293ff965" transactionProperties="#[vars.transactionProperties]" msg="End the flow to get item footprint line details by ItemId"/>
+	</flow>
+</mule>

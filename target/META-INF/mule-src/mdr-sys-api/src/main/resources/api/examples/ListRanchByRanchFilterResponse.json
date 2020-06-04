@@ -1,0 +1,78 @@
+{
+  "Totalresults": 3,
+  "Data": [
+    {
+      "RanchNbr": "0000332",
+      "Name": "Nogalera",
+      "GrowerGroup": "RAC",
+      "GrowerNbr": "0002470",
+      "GrowerName": "BerryMex, S. de R.L. de C.V.",
+      "FieldType": "CONVENTIONAL",
+      "ProducingArea": "0023",
+      "ReceivingArea": "GZM",
+      "GrowingRegion": "CMEX",
+      "GrowingDistrict": "CGUZM",
+      "BerryType": "BLUE",
+      "CommodityId": 2,
+      "Acres": "",
+      "ProducingAcres": "",
+      "LatLong": {
+        "Latitude": "20.00000",
+        "Longitude": "-103.00000"
+      },
+      "VendorAcctNbr": "200118",
+      "CustomerAcctNbr": "402100",
+      "OverallStatus": "Open",
+      "LastModified": "2020-03-25T22:22:17"
+    },
+    {
+      "RanchNbr": "0001333",
+      "Name": "Mundo Azul",
+      "GrowerGroup": "RAC",
+      "GrowerNbr": "0002470",
+      "GrowerName": "BerryMex, S. de R.L. de C.V.",
+      "FieldType": "CONVENTIONAL",
+      "ProducingArea": "0023",
+      "ReceivingArea": "GZM",
+      "GrowingRegion": "CMEX",
+      "GrowingDistrict": "CGUZM",
+      "BerryType": "BLUE",
+      "CommodityId": 2,
+      "Acres": "",
+      "ProducingAcres": "",
+      "LatLong": {
+        "Latitude": "20.00000",
+        "Longitude": "-103.00000"
+      },
+      "VendorAcctNbr": "200482",
+      "CustomerAcctNbr": "402748",
+      "OverallStatus": "Open",
+      "LastModified": "2020-03-25T22:22:17"
+    },
+    {
+      "RanchNbr": "0001400",
+      "Name": "Llano Azul",
+      "GrowerGroup": "RAC",
+      "GrowerNbr": "0002470",
+      "GrowerName": "BerryMex, S. de R.L. de C.V.",
+      "FieldType": "CONVENTIONAL",
+      "ProducingArea": "0023",
+      "ReceivingArea": "GZM",
+      "GrowingRegion": "CMEX",
+      "GrowingDistrict": "CGUZM",
+      "BerryType": "BLUE",
+      "CommodityId": 2,
+      "Acres": "",
+      "ProducingAcres": "",
+      "LatLong": {
+        "Latitude": "20.00000",
+        "Longitude": "-103.00000"
+      },
+      "VendorAcctNbr": "200492",
+      "CustomerAcctNbr": "402764",
+      "OverallStatus": "Open",
+      "LastModified": "2020-03-25T22:22:17"
+    }
+  ],
+  "Status": "OK"
+}

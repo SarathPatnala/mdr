@@ -1,0 +1,21 @@
+{
+   "TotalResults":1,
+   "Data":[
+      {
+         "GrowerNbr":"0991411",
+         "GrowerName":"Maripa Berry Farms, LLC",
+         "MasterGrowerNbr":"0000431",
+         "MasterGrowerName":"Maripa Berry Farms, LLC",
+         "GrowerGroup":"RAC",
+         "Addresses":null,
+         "BerryType":"Rasp",
+         "GrowingRegion":"CALIF",
+         "GrowingDistrict":"NOCAL",
+         "VendorAcctNbr":"",
+         "CustomerAcctNbr":"",
+         "OverallStatus":"Closed",
+         "LastModified":"2018-12-13T10:36:05"
+      }
+   ],
+   "Status":"Ok"
+}

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	
+	<flow name="postBlockDetails" doc:id="6c9c9d06-69eb-4ca6-9533-13975499ca5a" >
+		<min-log:put-all doc:name="transaction Properties" doc:id="24955693-7740-4226-b02d-3f64a537f0c3" newProperties='#[{"RanchNumber": payload.RanchNumber
+}]' transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="start Logger" doc:id="99e22219-d29f-4282-94c9-76cd9a435def" msg="start : postBlockDetails" transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="set Payload" doc:id="a96d26e8-387e-413e-9b4f-b74f9aa4c1ef" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestPayload" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="select Block table" doc:id="7dc003f6-12d4-46d9-8385-cfd0c0efae50" config-ref="MySQL_Config">
+			<db:sql >SELECT RanchNumber From MDR.M_Block 
+WHERE RanchNumber = :RanchNumber 
+AND BlockType = :BlockType
+AND BlockDesignator = :BlockDesignator  
+</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+   "RanchNumber" : vars.requestPayload.RanchNumber,
+   "BlockType" : vars.requestPayload.BlockType,
+   "BlockDesignator" : vars.requestPayload.BlockDesignator
+   
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="" doc:id="633fb95c-39b2-41c6-9d39-c71155c2cf14" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<db:update doc:name="update into Block table" doc:id="5934488b-a77c-4a68-8126-29789b405af4" config-ref="MySQL_Config" autoGenerateKeys="true" target="mrlCode" targetValue="#[payload.generatedKeys[0] default null]">
+					<db:sql >#[&quot;UPDATE MDR.M_Block SET
+OverallStatus = COALESCE(:OverallStatus, OverallStatus),
+ModifiedBy = COALESCE(:ModifiedBy, ModifiedBy),
+ModifiedDateTime = COALESCE(:ModifiedDateTime, ModifiedDateTime)
+WHERE 
+RanchNumber = :RanchNumber and 
+BlockType = :BlockType and 
+BlockDesignator = :BlockDesignator&quot;]
+</db:sql>
+					<db:parameter-types />
+					<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+import dwscripts::CommonFunc as call
+---
+{
+	RanchNumber : vars.requestPayload.RanchNumber,
+	BlockDesignator : vars.requestPayload.BlockDesignator,
+	BlockType : vars.requestPayload.BlockType,	
+	ModifiedBy : vars.requestPayload.ModifiedBy,
+	ModifiedDateTime : call::formatDate(vars.requestPayload.ModifiedDateTime) default null,
+	OverallStatus : vars.requestPayload.OverallStatus
+}]]]></db:input-parameters>
+					<db:auto-generated-keys-column-indexes >
+						<db:auto-generated-keys-column-index value="0" />
+					</db:auto-generated-keys-column-indexes>
+					<db:auto-generated-keys-column-names >
+						<db:auto-generated-keys-column-name value="MrlCode" />
+					</db:auto-generated-keys-column-names>
+				
+
+</db:update>
+			</when>
+			<otherwise >
+				<db:insert doc:name="insert into Block table" doc:id="8ac709b8-fff6-4d57-8446-3ec14306501d" config-ref="MySQL_Config" target="mrlCode" autoGenerateKeys="true" targetValue="#[payload.generatedKeys[0] default null]">
+					<db:sql >Insert into MDR.M_Block (RanchNumber, BlockDesignator, BlockType, OverallStatus, CreatedBy,CreatedDateTime,ModifiedBy,ModifiedDateTime)
+ values (:RanchNumber, :BlockDesignator, :BlockType, :OverallStatus, :CreatedBy, :CreatedDateTime,:ModifiedBy,:ModifiedDateTime)
+ </db:sql>
+					<db:parameter-types />
+					<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+import dwscripts::CommonFunc as call
+---
+{
+	RanchNumber : vars.requestPayload.RanchNumber,
+	BlockDesignator : vars.requestPayload.BlockDesignator,
+	BlockType : vars.requestPayload.BlockType,
+	CreatedBy : vars.requestPayload.CreatedBy,
+	CreatedDateTime : call::formatDate(vars.requestPayload.CreatedDateTime) default null,
+	ModifiedBy : vars.requestPayload.ModifiedBy,
+	ModifiedDateTime : call::formatDate(vars.requestPayload.ModifiedDateTime) default null,
+	OverallStatus : vars.requestPayload.OverallStatus
+}]]]></db:input-parameters>
+					<db:auto-generated-keys-column-indexes >
+						<db:auto-generated-keys-column-index value="0" />
+					</db:auto-generated-keys-column-indexes>
+					<db:auto-generated-keys-column-names >
+						<db:auto-generated-keys-column-name value="MrlCode" />
+					</db:auto-generated-keys-column-names>
+				
+
+</db:insert>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="response Payload" doc:id="aea9a123-8ed7-4294-adca-e19fcdfe165d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"Message":"Request processed successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end Logger" doc:id="817cf7a0-eb77-4fb9-9ab3-056cab310a2e" msg="end : postBlockDetails" transactionProperties="#[vars.transactionProperties]"/>
+	
+</flow>
+	
+	
+</mule>

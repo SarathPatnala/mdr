@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getranchbyranchfilterFlow" doc:id="7442a26e-4d5d-4c77-87af-1a864347a7f1">
+		<min-log:put doc:name="Put" doc:id="b25751c4-7403-4c52-9053-5f75ecebdf0f" key="QueryString" value="#[attributes.queryString]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="Start: Logger" doc:id="b27d4f98-b004-4544-affc-38a5f62f2462" msg="Start: Get ranch by ranch filter flow" transactionProperties="#[vars.transactionProperties]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="353d35b9-ba98-4e2d-ae07-89ff0a78f1e8" name="fetch-ranch-data-subflow" />
+		<choice doc:name="Choice" doc:id="9aa08d5d-df82-42e3-8bf3-5b3eebe0c9d9">
+			<when expression="#[vars.ranchPayload !=null]">
+				<flow-ref doc:name="Fetch Variety Code Sub Flow Reference" doc:id="40079435-1ad2-4d36-a24d-539f92e3e20f" name="fetch-variety-code-subflow" />
+				<flow-ref doc:name="Fetch Ranch Area List Sub Flow Reference" doc:id="65f2e61b-1310-435a-9149-ded23ad8a55c" name="FetchRanchAreaListSubFlow" />
+				<flow-ref doc:name="Fetch Attributes and Blocks Sub Flow Reference" doc:id="858736fd-3a1b-4f4a-aa38-bd64a4ac07f3" name="getattributesandblock"/>
+				<ee:transform doc:name="Transform Ranch Payload" doc:id="502ba51d-883d-4c71-8634-f580b5093a95">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+
+
+
+			vars.ranchPayload map (ranchData) -> using (rnbr = ranchData.RanchNbr)  {
+
+			"RanchNbr": ranchData.RanchNbr,
+		    "Name": ranchData.RanchName,
+		    "MasterRanchNbr": ranchData.MasterRanchNbr,
+		    "MasterRanchName": ranchData.MasterRanchName,
+		    "GrowerGroup": ranchData.GrowerGroup,
+		    "GrowerNbr": ranchData.GrowerNbr,
+		    "GrowerName": ranchData.GrowerName,
+		    "Addresses": [
+		        {
+		            "AddressType": "Master",
+		            "Address": {
+		                "StreetAddress": ranchData.StreetAddr1,
+		                "Locality": ranchData.Locality,
+		                "AdministrativeArea": ranchData.AdminArea,
+		                "PostalCode": ranchData.PostalCode,
+		                "PostalCodeSuffix": ranchData.AddAddrComponents,
+		                "Iso3Country": ranchData.Iso3Country,
+		                "AdditionalComponents": [
+		                    {
+		                        "ComponentType": "StreetAddress",
+		                        "LongName": ranchData.StreetAddr1,
+		                		   "ShortName":ranchData.StreetAddr2,
+		                    }
+		                ],
+		                "FormattedAddress":ranchData.StreetAddr1  as String ++ " " ++ ranchData.Locality  as String ++ ", " ++  ranchData.AdminArea  as String ++ ", " ++ ranchData.PostalCode  as String ++ " " ++ ranchData.Iso3Country  as String ++ " " ++ ranchData.StreetAddr2 as String  ,
+		                "LatLong": {
+		                     "Latitude": ranchData.Latitude  as String,
+		    					"Longitude":ranchData.Longitude  as String,
+		        },
+		                "Utc": "",
+		                "_links": [
+		                    {
+		                        "rel": "map",
+		                        "method": "GET",
+		                        "href": "https://www.google.com/maps/@0,0",
+		                        "title": "View in Google Map"
+		                    }
+		                ]
+		            }
+		        }
+		    ],
+		    "BerryType": capitalize(ranchData.BerryType),
+		    "ProducingArea": ranchData.ProducingArea,
+		    "DefaultReceivingArea": ranchData.ReceivingArea,
+		    "GrowingRegion": ranchData.GrowingRegion,
+		    "GrowingDistrict": ranchData.GrowingDistrict,
+		    "FieldType": capitalize(ranchData.FieldType),
+		    "ParcelNbr": ranchData.ParcelNbr,
+		    "OrganicInfo": {
+		        "IsoTransitionDate": ranchData.OrganicTransitionDate,
+		        "IsApproved": ranchData.IsApproved,
+		        "IsoApprovalDate": ranchData.ApprovalDate,
+		        "ApprovedBy": ranchData.ApprovedBy,
+		        "CertificationAgency": ranchData.CertificationAgency,
+		        "CdfaNbr": ranchData.CDFANbr
+		    },
+		    "CustomsInfo": {
+		        "Mid": ranchData.Mid,
+		        "MidAlias": ranchData.MidAlias
+		    },
+		    "Blocks": (vars.blockAttributes[ranchData.RanchNbr] distinctBy ($.DSABlockDesig)   map (master) -> using (des = master.DSABlockDesig){
+		   
+					"BlockDesignator": des ,
+					"BlockType": master.BlockType,
+					"Attribs":(vars.blockAttributes[ranchData.RanchNbr] filter ($.DSABlockDesig==des) map(attrib) -> using (d = attrib.BlockType) {
+						"AttribName": attrib.AttribName,
+						 (AttribValue: attrib.AttribValue) if(attrib.AttribName !='Variety'),
+				         (AttribValue: vars.varietyCode[attrib.AttribValue][0]) if(attrib.AttribName =='Variety')
+					}) filter ($.AttribName != null),
+					"Status": master.OverallStatus
+		
+		}) default [],
+		    "Varieties": vars.varietyCodeList filter ($.RanchNumber==rnbr) map {
+		    		"Code": $.Code,
+		    		"Descript": $.Descript
+		    },
+		    "BusModelGroup": ranchData.BusModelGroup,
+		    "Acres": ranchData.Acres as String,
+		    "ProducingAcres": ranchData.ProducingAcres as String,
+		    "LatLong": {
+		         "Latitude": ranchData.Latitude  as String {format: "0.00000"},
+		    		 "Longitude":ranchData.Longitude  as String {format: "0.00000"}
+		    },
+		    "VendorAcctNbr":ranchData.VendorAcctNumber,
+		    "CustomerAcctNbr": ranchData.CustomerAcctNumber,
+		    "PlantingGroupYear": ranchData.PlantingGroupYear,
+		    "DsaInvestment": ranchData.DsaInvestment,
+		    "OverallStatus": ranchData.OverallStatus,
+		    "LastModified": ranchData.LastModifiedDateTime,
+		    "ReceivingAreas": (vars.areaList[ranchData.MasterRanchNbr] map {
+		    		"Code": $.Code,
+		    		"Descript": $.Descript
+		    }) default []
+
+
+
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="308194ae-5d44-44c9-81b2-e3f63d245e70" message="Ranch Data Not Found" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Format Final Output" doc:id="64c6d0df-21e8-458e-8364-57787e78c8bf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+    "Data": payload,
+    "Status": "Ok"
+
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="50b40ff4-5c28-4566-a71a-ecfdbf23871a" msg="End: Get ranch by ranch filter flow" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+	<sub-flow name="fetch-ranch-data-subflow" doc:id="52edff64-435a-4224-a511-25765a66cb55" >
+		<ee:transform doc:name="Create Dynamic Query" doc:id="fb6df7f6-7080-4c6d-8796-430ba6ce4009">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="dynamicQuery" ><![CDATA[%dw 2.0
+output text/plain
+
+var status = attributes.queryParams.status
+var berrytype = attributes.queryParams.berrytype
+var growingdistrict = attributes.queryParams.growingdistrict
+var growingregion = attributes.queryParams.growingregion
+var producingarea = attributes.queryParams.producingarea
+var receivingarea = attributes.queryParams.receivingarea
+var growergroup = attributes.queryParams.growergroup
+var growernbr = attributes.queryParams.growernbr
+var masterranchnbr = attributes.queryParams.masterranchnbr
+var ranchnbr = attributes.queryParams.ranchnbr
+var fieldtype = attributes.queryParams.fieldtype
+var plantinggroupyear = attributes.queryParams.plantinggroupyear
+var dsainvestment = attributes.queryParams.dsainvestment
+var maxrecords = attributes.queryParams.maxrecords
+var modifiedafter = attributes.queryParams.modifiedafter
+
+var offset = vars.offset default 0
+
+var baseQuery = "
+A.TrnsRanchNbr AS RanchNbr,
+		A.MstrRanchNbr AS MasterRanchNbr,
+		A.MstrRanchName AS MasterRanchName,
+		A.[TrnsRanchName] AS RanchName,
+		A.[FieldType],
+		ISNULL(A.[ParcelNbr], '') AS ParcelNbr,
+        ISNULL(A.IsOrganic,0) AS IsOrganic,
+        ISNULL(A.IsApproved,0) AS IsApproved,
+        ISNULL(A.ApprovalDate,CONVERT(Datetime, '01/01/1941', 120)) AS ApprovalDate,
+        ISNULL(A.ApprovedBy,'') AS ApprovedBy,
+        ISNULL(A.[CertificationAgency],'') AS CertificationAgency,
+        ISNULL(A.[CDFANbr],'') AS CDFANbr,
+        ISNULL(A.DefaultReceivingAreaCode,'') AS ReceivingArea,
+        ISNULL(A.ProducingAreaCode,'') AS ProducingArea,
+        ISNULL(A.[CustomerInfo], '') AS CustomerInfo,
+        ISNULL(A.[Mid], '') AS Mid,
+        ISNULL(A.[MidAlias],'') AS MidAlias,
+        ISNULL(A.[BusModelGroup], '') AS BusModelGroup,
+        ISNULL(A.[Acres], 0) AS Acres,
+        ISNULL(A.ProducingAcres,0) AS ProducingAcres,
+        ISNULL(A.StreetAddr1,'') AS StreetAddr1,
+        ISNULL(A.StreetAddr2,'') AS StreetAddr2,
+        ISNULL(A.Locality,'') AS Locality,
+        ISNULL(A.AdminArea,'') AS AdminArea,
+        ISNULL(A.PostalCode,'') AS PostalCode,
+        ISNULL(A.Iso3Country,'') AS Iso3Country,
+        ISNULL(A.AddAddrComponents,'') AS AddAddrComponents,
+        ISNULL(A.[Latitude], '0') AS Latitude,
+        ISNULL(A.[Longitude],'0') AS Longitude,
+        ISNULL(A.[VendorAcctNumber], '') AS VendorAcctNumber,
+        ISNULL(A.[CustomerAcctNumber], '') AS CustomerAcctNumber,
+        A.[OverallStatus],
+        A.BerryType,
+        A.TrnsGrowerNbr AS GrowerNbr,
+        A.TrnsGrowerName AS GrowerName,
+        A.GrowerGroup,
+        A.GrowingDistrictCode AS GrowingDistrict,
+        A.GrowingRegionCode AS GrowingRegion,
+		ISNULL(A.PlantingGroupYear,'') AS PlantingGroupYear,
+		ISNULL(A.DsaInvestment,'') AS DsaInvestment,
+		ISNULL(A.IsoTransitionDate, CONVERT(Datetime, '01/01/1941', 120)) AS OrganicTransitionDate,
+		A.LastModifiedDateTime
+FROM AllTrnsRanchExtended A"
+
+
+var endQuery = if((offset) > 0) (" OFFSET " ++ offset ++ " ROWS") else ""
+
+var finalParams =  (if(isEmpty(status) == false) ("OverallStatus= '" ++ status ++ "' :") else "")
+                    ++ (if(isEmpty(berrytype) == false) ("BerryType= '" ++ berrytype ++ "' :") else "")
+                    ++ (if(isEmpty(growingdistrict) == false) ("GrowingDistrictCode= '" ++ growingdistrict ++ "' :") else "")
+                    ++ (if(isEmpty(growingregion) == false) ("GrowingRegionCode= '" ++ growingregion ++ "' :") else "")
+                    ++ (if(isEmpty(producingarea) == false) ("ProducingAreaCode= '" ++ producingarea ++ "' :") else "")
+                    ++ (if(isEmpty(receivingarea) == false) ("DefaultReceivingAreaCode= '" ++ receivingarea ++ "' :") else "")
+					++ (if(isEmpty(growergroup) == false) ("GrowerGroup= '" ++ growergroup ++ "' :") else "")
+					++ (if(isEmpty(growernbr) == false) ("TrnsGrowerNbr= '" ++ growernbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(ranchnbr) == false) ("TrnsRanchNbr= '" ++ ranchnbr ++ "' :") else "")
+					++ (if(isEmpty(fieldtype) == false) ("FieldType= '" ++ fieldtype ++ "' :") else "")
+					++ (if(isEmpty(plantinggroupyear) == false) ("PlantingGroupYear= '" ++ plantinggroupyear ++ "' :") else "")
+					++ (if(isEmpty(dsainvestment) == false) ("DsaInvestment= '" ++ dsainvestment ++ "' :") else "")
+					++ (if(isEmpty(modifiedafter) == false) ("LastModifiedDateTime>= '" ++ modifiedafter ++ "' :") else "")
+
+var finalQuery = "SELECT " ++ (if(isEmpty(maxrecords) == false) ("TOP " ++ maxrecords ++ " ") else "") ++ if(sizeOf(finalParams)> 0) (baseQuery ++ " WHERE " ++ finalParams) else baseQuery
+
+fun count(str: String, element: String) =
+  str splitBy("") reduce ((item, accumulator = 0) -> if(item == element) accumulator + 1 else accumulator)
+
+var amountOfColons = count(finalParams, ":")
+---
+
+
+
+finalQuery replace ":" with (if($$ == amountOfColons - 1) "" else "AND ") ++ endQuery
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Select Query to Database" doc:id="84c63df9-4391-46db-9061-62c0a17fa72a" config-ref="mdr_database_config" target="ranchPayload">
+			<db:sql>#[vars.dynamicQuery]</db:sql>
+		</db:select>
+	</sub-flow>
+	<sub-flow name="fetch-variety-code-subflow" doc:id="91f70937-13b8-4acd-a2d5-ea25bc0d67c6" >
+		<ee:transform doc:name="Create Dynamic Query" doc:id="8609ffda-5861-479c-b760-2f16aaeeaf22">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="dynamicQuery" ><![CDATA[%dw 2.0
+output text/plain
+
+var status = attributes.queryParams.status
+var berrytype = attributes.queryParams.berrytype
+var growingdistrict = attributes.queryParams.growingdistrict
+var growingregion = attributes.queryParams.growingregion
+var producingarea = attributes.queryParams.producingarea
+var receivingarea = attributes.queryParams.receivingarea
+var growergroup = attributes.queryParams.growergroup
+var growernbr = attributes.queryParams.growernbr
+var masterranchnbr = attributes.queryParams.masterranchnbr
+var ranchnbr = attributes.queryParams.ranchnbr
+var fieldtype = attributes.queryParams.fieldtype
+var plantinggroupyear = attributes.queryParams.plantinggroupyear
+var dsainvestment = attributes.queryParams.dsainvestment
+var maxrecords = attributes.queryParams.maxrecords
+var modifiedafter = attributes.queryParams.modifiedafter
+
+var offset = vars.offset default 0
+
+var baseQuery = "SELECT DISTINCT B.TrnsRanchNbr AS RanchNumber, B.VarietyCode AS Code, A.CommonName AS Descript, A.OverallStatus FROM AllTrnsRanchVariety B
+		JOIN AllVariety A ON A.VarietyCode = B.VarietyCode
+		JOIN AllTrnsRanchExtended C ON C.TrnsRanchNbr = B.TrnsRanchNbr
+		JOIN AllVarietyProducingArea D ON A.VarietyCode = D.VarietyCode
+		AND C.ProducingAreaCode = D.ProducingAreaCode"
+
+var endQuery = if((offset) > 0) (" OFFSET " ++ offset ++ " ROWS") else ""
+
+var finalParams = (if(isEmpty(berrytype) == false) ("C.BerryType= '" ++ berrytype ++ "' :") else "")
+                    ++ (if(isEmpty(growingdistrict) == false) ("C.GrowingDistrictCode= '" ++ growingdistrict ++ "' :") else "")
+                    ++ (if(isEmpty(growingregion) == false) ("C.GrowingRegionCode= '" ++ growingregion ++ "' :") else "")
+                    ++ (if(isEmpty(producingarea) == false) ("C.ProducingAreaCode= '" ++ producingarea ++ "' :") else "")
+                    ++ (if(isEmpty(receivingarea) == false) ("C.DefaultReceivingAreaCode= '" ++ receivingarea ++ "' :") else "")
+					++ (if(isEmpty(growergroup) == false) ("C.GrowerGroup= '" ++ growergroup ++ "' :") else "")
+					++ (if(isEmpty(growernbr) == false) ("C.TrnsGrowerNbr= '" ++ growernbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("C.MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(ranchnbr) == false) ("C.TrnsRanchNbr= '" ++ ranchnbr ++ "' :") else "")
+					++ (if(isEmpty(fieldtype) == false) ("C.FieldType= '" ++ fieldtype ++ "' :") else "")
+					++ (if(isEmpty(plantinggroupyear) == false) ("C.PlantingGroupYear= '" ++ plantinggroupyear ++ "' :") else "")
+					++ (if(isEmpty(dsainvestment) == false) ("C.DsaInvestment= '" ++ dsainvestment ++ "' :") else "")
+					++ (if(isEmpty(modifiedafter) == false) ("B.LastModifiedDateTime>= '" ++ modifiedafter ++ "' :") else "")
+
+var finalQuery =  if(sizeOf(finalParams)> 0) (baseQuery ++ " WHERE " ++ finalParams) else baseQuery ++ " AND A.OverallStatus= 'Open'"
+
+fun count(str: String, element: String) =
+  str splitBy("") reduce ((item, accumulator = 0) -> if(item == element) accumulator + 1 else accumulator)
+
+var amountOfColons = count(finalParams, ":")
+---
+
+
+
+finalQuery replace ":" with (if($$ == amountOfColons - 1) "" else "AND ") ++ endQuery
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Select Query on Database" doc:id="0f8b20e5-2bd1-4640-ad72-45cb0a29a649" config-ref="mdr_database_config" target="varietyCodeList">
+			<db:sql>#[vars.dynamicQuery]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2dd380e0-76dc-4294-9b71-812ec9d62e39" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="varietyCode" ><![CDATA[%dw 2.0
+output application/json
+
+---
+vars.varietyCodeList map (item, indexOfItem) -> {
+
+		(item.Code) : item.Descript
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="FetchRanchAreaListSubFlow" doc:id="3b469b54-a362-482b-bb8c-bf2cf1cf8964" >
+		<ee:transform doc:name="Create Dynamic Query" doc:id="a8fbd747-6f57-4201-b9da-68f834c55cf5">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="dynamicQuery" ><![CDATA[%dw 2.0
+output text/plain
+
+var status = attributes.queryParams.status
+var berrytype = attributes.queryParams.berrytype
+var growingdistrict = attributes.queryParams.growingdistrict
+var growingregion = attributes.queryParams.growingregion
+var producingarea = attributes.queryParams.producingarea
+var receivingarea = attributes.queryParams.receivingarea
+var growergroup = attributes.queryParams.growergroup
+var growernbr = attributes.queryParams.growernbr
+var masterranchnbr = attributes.queryParams.masterranchnbr
+var ranchnbr = attributes.queryParams.ranchnbr
+var fieldtype = attributes.queryParams.fieldtype
+var plantinggroupyear = attributes.queryParams.plantinggroupyear
+var dsainvestment = attributes.queryParams.dsainvestment
+var maxrecords = attributes.queryParams.maxrecords
+var modifiedafter = attributes.queryParams.modifiedafter
+
+var offset = vars.offset default 0
+
+var baseQuery = "SELECT DISTINCT A.MstrRanchNbr AS MasterRanchNumber, A.ReceivingAreaCode AS Code, A.ReceivingAreaDescription AS Descript FROM AllMstrRanchReceivingArea A
+            JOIN AllTrnsRanchExtended C ON C.MstrRanchNbr = A.MstrRanchNbr"
+
+var endQuery = if((offset) > 0) (" OFFSET " ++ offset ++ " ROWS") else ""
+
+var finalParams = (if(isEmpty(berrytype) == false) ("C.BerryType= '" ++ berrytype ++ "' :") else "")
+                    ++ (if(isEmpty(growingdistrict) == false) ("C.GrowingDistrictCode= '" ++ growingdistrict ++ "' :") else "")
+                    ++ (if(isEmpty(growingregion) == false) ("C.GrowingRegionCode= '" ++ growingregion ++ "' :") else "")
+                    ++ (if(isEmpty(producingarea) == false) ("C.ProducingAreaCode= '" ++ producingarea ++ "' :") else "")
+                    ++ (if(isEmpty(receivingarea) == false) ("C.DefaultReceivingAreaCode= '" ++ receivingarea ++ "' :") else "")
+					++ (if(isEmpty(growergroup) == false) ("C.GrowerGroup= '" ++ growergroup ++ "' :") else "")
+					++ (if(isEmpty(growernbr) == false) ("C.TrnsGrowerNbr= '" ++ growernbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("C.MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("A.MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(ranchnbr) == false) ("C.TrnsRanchNbr= '" ++ ranchnbr ++ "' :") else "")
+					++ (if(isEmpty(fieldtype) == false) ("C.FieldType= '" ++ fieldtype ++ "' :") else "")
+					++ (if(isEmpty(plantinggroupyear) == false) ("C.PlantingGroupYear= '" ++ plantinggroupyear ++ "' :") else "")
+					++ (if(isEmpty(dsainvestment) == false) ("C.DsaInvestment= '" ++ dsainvestment ++ "' :") else "")
+					++ (if(isEmpty(modifiedafter) == false) ("B.LastModifiedDateTime>= '" ++ modifiedafter ++ "' :") else "")
+
+var finalQuery =  if(sizeOf(finalParams)> 0) (baseQuery ++ " WHERE " ++ finalParams) else baseQuery 
+
+fun count(str: String, element: String) =
+  str splitBy("") reduce ((item, accumulator = 0) -> if(item == element) accumulator + 1 else accumulator)
+
+var amountOfColons = count(finalParams, ":")
+---
+
+
+
+finalQuery replace ":" with (if($$ == amountOfColons - 1) "" else "AND ") ++ endQuery
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Query On Database to Fetch Area List" doc:id="27848b50-7153-4aaf-b300-dc9324b8a6eb" config-ref="mdr_database_config" target="areaList">
+			<db:sql >#[vars.dynamicQuery]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="50f5dfd4-58f2-4cc3-a09d-0936a90d4fbc" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="areaList" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.areaList groupBy $.MasterRanchNumber]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="getattributesandblock" doc:id="a5f47ea7-455d-4a0a-8a09-4b2b33524952" >
+		<ee:transform doc:name="Create Dynamic Query" doc:id="8eb09811-66c5-4fd3-a2a9-0212f79a8af2">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="dynamicQuery"><![CDATA[%dw 2.0
+output text/plain
+
+var status = attributes.queryParams.status
+var berrytype = attributes.queryParams.berrytype
+var growingdistrict = attributes.queryParams.growingdistrict
+var growingregion = attributes.queryParams.growingregion
+var producingarea = attributes.queryParams.producingarea
+var receivingarea = attributes.queryParams.receivingarea
+var growergroup = attributes.queryParams.growergroup
+var growernbr = attributes.queryParams.growernbr
+var masterranchnbr = attributes.queryParams.masterranchnbr
+var ranchnbr = attributes.queryParams.ranchnbr
+var fieldtype = attributes.queryParams.fieldtype
+var plantinggroupyear = attributes.queryParams.plantinggroupyear
+var dsainvestment = attributes.queryParams.dsainvestment
+var maxrecords = attributes.queryParams.maxrecords
+var modifiedafter = attributes.queryParams.modifiedafter
+
+var offset = vars.offset default 0
+
+var baseQuery = "SELECT A.TrnsRanchNbr AS RanchNumber, A.DSABlockDesig, A.BlockType, A.OverallStatus, B.AttribName, B.AttribValue
+FROM AllTrnsRanchBlock A LEFT JOIN AllTrnsRanchBlockAttrib B ON B.TrnsRanchNbr = A.TrnsRanchNbr and  B.DSABlockDesig = A.DSABlockDesig JOIN AllTrnsRanchExtended C on A.TrnsRanchNbr  = C.TrnsRanchNbr"
+
+var endQuery = if((offset) > 0) (" OFFSET " ++ offset ++ " ROWS") else ""
+
+var finalParams = (if(isEmpty(berrytype) == false) ("C.BerryType= '" ++ berrytype ++ "' :") else "")
+                    ++ (if(isEmpty(growingdistrict) == false) ("C.GrowingDistrictCode= '" ++ growingdistrict ++ "' :") else "")
+                    ++ (if(isEmpty(growingregion) == false) ("C.GrowingRegionCode= '" ++ growingregion ++ "' :") else "")
+                    ++ (if(isEmpty(producingarea) == false) ("C.ProducingAreaCode= '" ++ producingarea ++ "' :") else "")
+                    ++ (if(isEmpty(receivingarea) == false) ("C.DefaultReceivingAreaCode= '" ++ receivingarea ++ "' :") else "")
+					++ (if(isEmpty(growergroup) == false) ("C.GrowerGroup= '" ++ growergroup ++ "' :") else "")
+					++ (if(isEmpty(growernbr) == false) ("C.TrnsGrowerNbr= '" ++ growernbr ++ "' :") else "")
+					++ (if(isEmpty(masterranchnbr) == false) ("C.MstrRanchNbr= '" ++ masterranchnbr ++ "' :") else "")
+					++ (if(isEmpty(ranchnbr) == false) ("A.TrnsRanchNbr= '" ++ ranchnbr ++ "' :") else "")
+					++ (if(isEmpty(fieldtype) == false) ("C.FieldType= '" ++ fieldtype ++ "' :") else "")
+					++ (if(isEmpty(plantinggroupyear) == false) ("C.PlantingGroupYear= '" ++ plantinggroupyear ++ "' :") else "")
+					++ (if(isEmpty(dsainvestment) == false) ("C.DsaInvestment= '" ++ dsainvestment ++ "' :") else "")
+					++ (if(isEmpty(modifiedafter) == false) ("B.LastModifiedDateTime>= '" ++ modifiedafter ++ "' :") else "")
+
+var finalQuery =  if(sizeOf(finalParams)> 0) (baseQuery ++ " WHERE " ++ finalParams) else baseQuery ++ " AND A.OverallStatus= 'Open'"
+
+fun count(str: String, element: String) =
+  str splitBy("") reduce ((item, accumulator = 0) -> if(item == element) accumulator + 1 else accumulator)
+
+var amountOfColons = count(finalParams, ":")
+---
+
+
+
+finalQuery replace ":" with (if($$ == amountOfColons - 1) "" else "AND ") ++ endQuery
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Fetch Attributes From Database" doc:id="954b3d01-ec3f-4d8f-a3aa-fc06357d44d4" config-ref="mdr_database_config" target="blockAttributes">
+			<db:sql>#[vars.dynamicQuery]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="4aa29f0f-81b1-418a-a305-f1a4e9d4acbf">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="blockAttributes"><![CDATA[%dw 2.0
+output application/java
+---
+vars.blockAttributes groupBy $.RanchNumber
+
+
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>

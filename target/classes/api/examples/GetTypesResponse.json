@@ -1,0 +1,16 @@
+{
+	"PlantTypes": [
+		"Plug2Liter",
+		"Plug Dormant",
+		"Plug Green",
+		"BareRootGreen"
+	],
+	"FieldTypes": [
+		"Organic",
+		"Conventional"
+	],
+	"InventoryTypes": [
+	  "FinishedGoods", 
+	  "Bluk"
+	]
+}

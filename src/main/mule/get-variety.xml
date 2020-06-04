@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getVarietyDetails" doc:id="8031b3f8-b6f0-42b2-b2ba-bee47314d229" >
+		<min-log:put doc:name="transaction Properties" doc:id="94b03011-13de-46a0-8cc2-595549a21632" transactionProperties="#[vars.transactionProperties]" key="QueryParams" value="#[attributes.queryString]" target="transactionProperties" />
+		<min-log:log doc:name="start Logger" doc:id="0de55420-31e2-4860-a399-68edfed5d537" transactionProperties="#[vars.transactionProperties]" msg=" start: getVarietyDetails"/>
+		<db:select doc:name="get variety details" doc:id="b7599374-9cdb-4835-9137-1e79054f493e" config-ref="MySQL_Config">
+					<db:sql>#[&quot;Select distinct V.VarietyName as Descript ,
+V.VarietyCode as Code 
+From M_Variety V join M_VarietyProducingArea P on V.VarietyCode = P.VarietyCode
+WHERE 1=1
+AND P.ProducingAreaCode = coalesce(:producingAreaCode,P.ProducingAreaCode)
+AND P.CommodityCode  = coalesce(:commodityCode,P.CommodityCode)&quot;]</db:sql>
+					<db:input-parameters><![CDATA[#[{
+producingAreaCode : attributes.queryParams.producingarea,
+commodityCode : attributes.queryParams.berrytype
+}]]]></db:input-parameters>
+				</db:select>
+		<ee:transform doc:name="response Payload" doc:id="b8b4437e-afa6-4d76-babf-2ed33beba8dd">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload map {
+		"Code": $.Code,
+        "Descript": $.Descript
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="a966a770-d4e8-499d-ad8e-c773c1111c6e" msg="end: getVarietyDetails" transactionProperties="#[vars.transactionProperties]"/>
+		
+
+	</flow>
+</mule>

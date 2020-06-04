@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-growerentity-detailsFlow" doc:id="a93a0efe-b3d2-4ebb-8557-0512cb0d03c2" >
+		<min-log:put doc:name="Put" doc:id="3ebb6cf6-0bb4-4a62-92a0-fca77b49639b" key="GrowerEntityId" value="#[attributes.queryParams.growerEntityId]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start: Logger" doc:id="f7c7257d-c77c-4509-9453-b36368ce36d8" msg='#["Start: Flow to get grower entity details for growerentity id: " ++ vars.transactionProperties.GrowerEntityId]' transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Get Entity Details from Database" doc:id="881fe104-ab91-451d-ba03-dd8bac0ef5d4" config-ref="mdr_database_config">
+			<db:sql>SELECT * FROM [MDR].[dbo].[AllGrowerEntity] where GrowerEntityId = :GrowerEntityId</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	GrowerEntityId: vars.transactionProperties.GrowerEntityId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="64421cbd-21ca-407d-b5cc-cab595fb8163" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{  
+   "GrowerEntityId":payload[0].GrowerEntityId default "",
+   "GrowerEntity":payload[0].GrowerEntity default "",
+   "VendorInvoiceAccNum": payload[0].VendorInvoiceAccNum default "",
+   "GrowingDistrictCode":payload[0].GrowingDistrictCode default "",
+   "Commodity":payload[0].Commodity default "",
+   "FieldType":payload[0].FieldType default "",
+   "Status":payload[0].Status default "",
+   "CreatedBy":payload[0].CreatedBy default "",
+   "CreatedDateTime":payload[0].CreatedDateTime default "",
+   "LastChangedBy":payload[0].LastChangedBy default "",
+   "LastChangedDateTime":payload[0].LastChangedDateTime default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="c50af5c5-ac4c-4da9-99b1-6a3c14b6d350" msg='#["Start: Flow to get grower entity details for growerentity id: " ++ vars.transactionProperties.GrowerEntityId]' transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

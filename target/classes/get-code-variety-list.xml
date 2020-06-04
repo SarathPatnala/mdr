@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getcodevarietylistFlow" doc:id="e9b4340f-721c-4fcf-a42c-5498a546033d" >
+		<min-log:put doc:name="Put" doc:id="4fa8484e-07ae-4fa5-aa0d-06d0d81ad7ec" key="BerryType" value="#[attributes.uriParams.berrytype]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties" />
+		<min-log:log doc:name="Start: Logger" doc:id="678f7ba2-d5d8-4527-a80a-504784ce9f5b" msg='#["Start:  Get Code Variety List for berrytype : " ++ vars.transactionProperties.BerryType]' transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Select Query on Database" doc:id="e1902bb2-d45d-4f21-b93f-d80af54b2af6" config-ref="mdr_database_config">
+			<db:sql >#[&quot;SELECT DISTINCT A.VarietyCode, A.ReceivingCode, A.CommonName, IsNull(Selection,'') AS Selection, BerryType,
+IsNull(PatentName,'') As PatentName, IsProprietary, a.ProprietaryType,a.OwnerOrg AS OwnerOrganization,
+ISNULL(Genotype,'') AS Genotype, A.OverallStatus,IsNull(TradeMark,'') As TradeMark, A.LastModifiedDateTime  FROM AllVariety A
+WHERE UPPER(OverallStatus) = UPPER('open') AND UPPER(BerryType) = '&quot; ++ upper(vars.transactionProperties.BerryType) ++ &quot;'&quot;]</db:sql>
+		</db:select>
+		<ee:transform doc:name="Formatting Output" doc:id="0b75a666-204f-49df-a64e-84c367c691d9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"Data": payload map {
+		"Code": $.VarietyCode,
+        "Descript": $.CommonName
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="e515b7f1-84fb-452a-9370-4eb0c7c7539e" msg="End: Get Code Variety List" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

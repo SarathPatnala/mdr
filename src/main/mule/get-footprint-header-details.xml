@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-all-footprint-header-detailsFlow" doc:id="d11b30c5-2f67-46d4-b015-c18cf1b74aa1" >
+		<min-log:put doc:name="Put" doc:id="3d06e652-71a4-4f73-87af-cb6a8a5484b8" key="type" value="#[attributes.uriParams[0]]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="Start Log" doc:id="4bde8973-75ab-4278-b60b-8f7b6777894e" msg="Start flow to get item footprint header details" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Query to select all footprint header details" doc:id="4461afff-d5da-49d2-b5df-4f82db8ba688" config-ref="mdr_database_config">
+			<db:sql >#[&quot;SELECT [ItemFootprintId]
+      ,[ItemId]
+      ,[ItemNbr]
+      ,[Type]
+      ,[FootprintCode]
+      ,[CasesPerLevel]
+      ,[NestLength]
+      ,[NestWidth]
+      ,[NestHeight]
+      ,[PalletStackHeight]
+      ,[DefaultUnitType]
+      ,[StackMethod]
+      ,[LevelUnits]
+      ,[IsDefaultFootprint]
+  FROM [MDR].[dbo].[AllItemFootprint] WHERE Type = '&quot; ++  attributes.uriParams[0] ++ &quot;'&quot;]</db:sql>
+		</db:select>
+		<choice doc:name="Choice" doc:id="a5809e6f-69f3-4d0a-8441-61f3afcf55ca" >
+			<when expression="#[sizeOf(payload) &gt;0]">
+				<ee:transform doc:name="Transform Message" doc:id="ce4c6f8a-3ee9-4db4-82c8-da51b9b91a92">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults" : sizeOf(payload),
+		"Data":payload map {
+		"CasesPerLevel": $.CasesPerLevel,
+		"FootprintCode": $.FootprintCode,
+		"Height": $.NestHeight,
+		"IsDefault": $.IsDefaultFootprint,
+		"ItemCode": $.ItemNbr,
+		"Length": $.NestLength,
+		"LevelUnits": $.LevelUnits,
+		"PalletStackHeight": $.PalletStackHeight,
+		"StackMethod": $.StackMethod,
+		"Width": $.NestWidth,
+		"ItemId": $.ItemId,
+		"ItemType": $.Type,
+		"ItemFootprintId" : $.ItemFootprintId
+				},
+		
+	"Status" : "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<set-variable value="200" doc:name="httpStatus" doc:id="7926660b-5c8e-4f5a-af78-2658c32326c8" variableName="httpStatus"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="0b20f31b-ed18-47c6-a6ce-931e1111e19e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults" : sizeOf(payload),
+		"Data":payload
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="200" doc:name="httpStatus" doc:id="8b7cd083-6be7-4793-95d1-ec18e562ae31" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+		<min-log:log doc:name="End Log" doc:id="d990d851-03ec-4087-bd26-058a4b315853" msg="End flow to get item footprint header details." transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

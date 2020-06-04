@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getEstimategrouplist" doc:id="1437a31b-2ab1-4c89-aabb-378cd9457df4" >
+		<min-log:put doc:name="transaction Properies" doc:id="a0294507-f4f8-4fbf-a9c7-a036ced05ccd" key="estimategroup" value="#[attributes.requestPath]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="start : Logger" doc:id="ae6260b4-81db-4174-a6b4-0474c59a4fda" msg="start: getEstimategrouplist" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="get estimate group details" doc:id="d5959903-12a7-4ecb-a1f2-e7e09a7684f5" config-ref="MySQL_Config">
+			<db:sql>#[ &quot;SELECT distinct EstimateGroup FROM MDR.M_Item
+order by EstimateGroup&quot;]</db:sql>
+		</db:select>
+		<ee:transform doc:name="response Payload" doc:id="06223474-53f0-49a9-82f0-865411a1d29b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Totalresults": sizeOf(payload),
+	"Data": payload map {
+		"Description": $.EstimateGroup
+	},
+	"Status": "Ok"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="end: Logger" doc:id="ec024da1-56be-404b-ba29-06ccb2fc824a" msg="end: getEstimategrouplist" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

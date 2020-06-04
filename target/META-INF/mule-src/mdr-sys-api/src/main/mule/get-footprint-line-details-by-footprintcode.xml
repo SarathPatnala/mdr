@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-itemfootprint-line-details-by-footprintcodeFlow" doc:id="02fa5904-1432-4268-a30c-9310af87947d" >
+		<min-log:put doc:name="Put TransactionProperties" doc:id="80f93b2b-798f-407c-b2b8-76701270cad7" key="FootprintCode" value="#[attributes.uriParams.footprintcode]" transactionProperties="#[vars.transactionProperties]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Log" doc:id="51cc5d3b-7df7-4e3b-a1d4-45cd88c5d19d" msg="Start the flow to get item footprint line details by footprint code" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Query to select itemfootprint line details by footprintcode" doc:id="b26b5f62-2e5e-47f6-82e2-504295bc25af" config-ref="mdr_database_config">
+			<db:sql >	SELECT ItemFootprintDetailId
+      ,ItemId
+      ,ItemNbr
+      ,ItemFootprintId
+      ,UnitOfMeasure
+      ,UnitOfMeasureLevel
+      ,Length
+      ,Width
+      ,Height
+      ,GrossWeight
+      ,NetWeight
+      ,IsPallet
+      ,IsLayer
+      ,IsCase
+      ,IsPackageUOM
+      ,IsStockUOM
+      ,IsReceiveUOM
+      ,UnitQuantity
+      ,IsCartonized
+      ,IsCartonDist
+      ,Threshold
+      ,IsBulkPick
+      ,FootprintCode
+  FROM MDR.dbo.AllItemFootprintDetail
+  WHERE FootprintCode = :FootprintCode</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'FootprintCode': vars.transactionProperties.FootprintCode
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="21a44e79-3a0d-4fbb-8ee3-014a41a25717" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Log" doc:id="dd1d6b2c-545d-4720-97ca-fa8f66cb7940" msg="End the flow to get item footprint line details by footprint code" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

@@ -1,0 +1,9 @@
+{ "RanchNumber" : "0000002",
+	"BlockDesignator" : "A1",
+	"BlockType" : "ApplicationBlocke",
+	"CreatedBy" : "Mulesoft",
+	"ModifiedBy": "Mulesoft",
+	"CreatedDateTime" : "2020-04-05T23:55:46Z",
+	"ModifiedDateTime": "2020-04-05T23:55:46Z",
+	"OverallStatus": "Open"
+}

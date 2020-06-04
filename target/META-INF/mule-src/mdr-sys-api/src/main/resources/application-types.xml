@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="xmlSchema" format="xml">
+      <types:example format="xml" element="LciDataListSchema" location="examples/LciDataLists-2.xml"/>
+    </types:type>
+    <types:type name="jsonschema" format="json">
+      <types:shape format="weave" example="examples/sampleout-2.json"><![CDATA[%dw 2.0
+type jsonschema = {|
+  SchemaName: String, 
+  DataLists: Array<{|
+    PropName: String, 
+    DefaultCode: String, 
+    DataList: Array<{|
+      Code: String, 
+      Value: String
+    |}>
+  |}>
+|} {"MetadataFormat": "json",
+"example": "{\"SchemaName\":\"LciDataLists\",\"DataLists\":[{\"PropName\":\"BerryType\",\"DefaultCode\":\"RASP\",\"DataList\":[{\"Code\":\"STRAW\",\"Value\":\"STRAW\"},{\"Code\":\"BLACK\",\"Value\":\"BLACK\"},{\"Code\":\"RASP\",\"Value\":\"RASP\"},{\"Code\":\"BLUE\",\"Value\":\"BLUE\"}]},{\"PropName\":\"Variety\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"Maravilla\",\"Value\":\"Maravilla\"},{\"Code\":\"Sunshine\",\"Value\":\"Sunshine\"},{\"Code\":\"Esperanza\",\"Value\":\"Esperanza\"},{\"Code\":\"Jasmine\",\"Value\":\"Jasmine\"},{\"Code\":\"RH740.1\",\"Value\":\"RH740.1\"},{\"Code\":\"Advanced Selection\",\"Value\":\"Advanced Selection\"}]},{\"PropName\":\"FieldType\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"Organic\",\"Value\":\"Organic\"},{\"Code\":\"Conventional\",\"Value\":\"Conventional\"},{\"Code\":\"Transitional\",\"Value\":\"Transitional\"}]},{\"PropName\":\"Treatment\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"New Planting - roots\",\"Value\":\"New Planting - roots\"},{\"Code\":\"New Planting  - frozen tp\",\"Value\":\"New Planting  - frozen tp\"},{\"Code\":\"New planting - fresh tp\",\"Value\":\"New planting - fresh tp\"},{\"Code\":\"Mowdown\",\"Value\":\"Mowdown\"},{\"Code\":\"Store mowdown\",\"Value\":\"Store mowdown\"},{\"Code\":\"Green cutback\",\"Value\":\"Green cutback\"}]},{\"PropName\":\"UnitSize\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"5L\",\"Value\":\"5L\"},{\"Code\":\"7L\",\"Value\":\"7L\"},{\"Code\":\"7.5L\",\"Value\":\"7.5L\"},{\"Code\":\"10L\",\"Value\":\"10L\"}]},{\"PropName\":\"TermLength\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"Short-Term\",\"Value\":\"Short-Term\"},{\"Code\":\"Long-Term\",\"Value\":\"Long-Term\"}]},{\"PropName\":\"ReasonCode\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"Plant Health\",\"Value\":\"Plant Health\"},{\"Code\":\"Physical Handling\",\"Value\":\"Physical Handling\"},{\"Code\":\"Bin Integrity\",\"Value\":\"Bin Integrity\"},{\"Code\":\"Other\",\"Value\":\"Other\"}]},{\"PropName\":\"EditReasonCode\",\"DefaultCode\":\"\",\"DataList\":[{\"Code\":\"Error Correction\",\"Value\":\"Error Correction\"}]}]}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#42113be0-b48b-4ba6-a847-92c5291cd64a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="xmlSchema"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="xmlSchema"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#e95055a7-8693-4b3a-ae89-dea1e72fdfa9"/>
+  <types:enrichment select="#a385840c-b1c0-436b-8960-fb080f1d6273"/>
+  <types:enrichment select="#2309c28b-e004-4289-aa7f-7e995ae77522"/>
+  <types:enrichment select="#53b3fce0-0882-493a-a8d4-46fd784aeefb"/>
+  <types:enrichment select="#7d9b7c47-31c3-4e15-99db-289aa8b24ec3"/>
+  <types:enrichment select="#4685d2a5-2607-46db-a681-d659c41e28b3"/>
+  <types:enrichment select="#414a0fce-b1c1-4dcc-9bdc-d092a56818e0"/>
+  <types:enrichment select="#39cde1fc-728c-46d8-b662-3a499f6cc46b"/>
+  <types:enrichment select="#b89f09dd-9e1c-4109-a19e-bf65a6d10a8a"/>
+  <types:enrichment select="#3992a0b5-86aa-40f0-ad00-88380de816e7"/>
+  <types:enrichment select="#4aa29f0f-81b1-418a-a305-f1a4e9d4acbf"/>
+  <types:enrichment select="#50f5dfd4-58f2-4cc3-a09d-0936a90d4fbc"/>
+  <types:enrichment select="#a96d26e8-387e-413e-9b4f-b74f9aa4c1ef"/>
+</types:mule>

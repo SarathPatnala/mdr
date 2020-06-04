@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-production-season-id-Flow" doc:id="8802bee8-6ba1-4f39-8e68-372a85d0b07e" >
+		<min-log:put doc:name="Put" doc:id="19f796d2-0be9-4de3-b915-af0a402cdd5b" key="ProductionSeason" value=" #[attributes.uriParams.productionseason]" target="transactionProperties" transactionProperties="#[vars.transactionProperties]" />
+		<min-log:log doc:name="Start: Logger" doc:id="c559be4c-d435-4a3d-b7df-6f894253c16a" msg='#["Start: Get Production Season Id:   " ++ vars.transactionProperties.ProductionSeason]' transactionProperties="#[vars.transactionProperties]" />
+		<db:select doc:name="Select Query on Database" doc:id="09350504-0c21-45fc-91d8-25dde3e11cdc" config-ref="mdr_database_config" >
+			<db:sql >SELECT 
+ProductionSeasonId
+FROM dbo.AllProductionSeason where ProductionSeasonName =:ProductionSeason</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'ProductionSeason': vars.transactionProperties.ProductionSeason
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Format Output" doc:id="019e3969-08b0-45c8-872f-5f8ef8b9ad68" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End : Logger " doc:id="e5da88ba-e76e-48ae-9713-9346bcf15882" msg="End: Get Production Season Id flow" transactionProperties="#[vars.transactionProperties]" />
+	</flow>
+</mule>

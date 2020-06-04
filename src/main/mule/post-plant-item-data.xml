@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="post-plant-item-dataFlow" doc:id="ba38d439-08d8-44a6-a916-d329e86c4df5" >
+		<min-log:put doc:name="TransactionProperties" doc:id="15324ef3-d1cd-43a7-9410-9c95e8430e8b" key="Plantitemdata" value="payload.ItemId" target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="Start Logger" doc:id="fead0680-2ff2-462d-adeb-cad6c112c966" msg="Start: Flow to post plant item data" transactionProperties="#[vars.transactionProperties]"/>
+		<ee:transform doc:name="Format JSON Data for Insert" doc:id="352137a3-709b-4a79-9bbd-12bdfb4dfa1c" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputJSON" ><![CDATA[%dw 2.0
+output application/java
+---
+(write(payload,'application/json') replace /\n/ with "" ) replace /\s/ with " "]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="4c376f89-a0c4-401f-805e-fdbcb7c81465" config-ref="mdr_database_config">
+			<db:sql >{call dbo.spPutItemPlantAttribute(:JSONData, :output)}</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'JSONData': vars.inputJSON
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="output" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<min-log:log doc:name="End: Logger" doc:id="0ca5b56c-e518-4321-8678-e455f1d690b8" msg="End: Flow to post plant item data" transactionProperties="#[vars.transactionProperties]"/>
+		<set-variable value="204" doc:name="httpStatus" doc:id="a2dafb60-f222-464a-aa3e-76e3e5d3b329" variableName="httpStatus"/>
+		<ee:transform doc:name="Transform Message" doc:id="922d4982-a99d-4802-accd-640e672b3366" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{"Message": "Record Processed Successfully"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

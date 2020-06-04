@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+	<http:listener-config name="api-httpListenerConfig"
+		doc:description="This http listener config" doc:name="HTTP Listener config">
+		<http:listener-connection host="0.0.0.0"
+			port="${secure::http.listener.port}" protocol="HTTPS" tlsContext="TLS_Context"/>
+	</http:listener-config>
+		<db:config name="mdr_database_config" doc:name="Database Config" doc:id="193a0933-90ab-4f86-98e0-b365a8a92185" >
+		<db:generic-connection url="jdbc:jtds:sqlserver://${secure::mdr.db.host}:${secure::mdr.db.port};domain=${secure::mdr.db.domain};databaseName=${secure::mdr.db.name};user=${secure::mdr.db.user};password=${secure::mdr.db.pass};ssl=require" driverClassName="${secure::mdr.db.driver}">
+			<db:pooling-profile maxPoolSize="${secure::mdr.db.poolingprofile.max.poolsize}" minPoolSize="${secure::mdr.db.poolingprofile.min.poolsize}"/>
+		</db:generic-connection>
+	</db:config>
+	<secure-properties:config name="Deployment_Specific_Properties"
+		doc:name="Secure Properties Config" file="env-${mule.env}.yaml"
+		key="${mule.key}"
+		doc:description="Deployment specific properties file which supports encryption of sensitive properties, like passwords, user ids, etc. This deployment environment sensitive...meaning that each deployment environment (DEV, QA, PROD for instance) has it's own property file.
+
+These can be either .property files or .yaml files. The recommended approach is to use a YAML configuration files, because it allows the addition of type validations and autocompletion.
+
+Both encrypted and non-encrypted values can be used anywhere in the Mule app. Encrypted values should be defined between the sequence ![value].
+
+Note that you have to use the secure:: prefix to access all values inside a secure properties file, even if the values are non-encrypted." />
+	<tls:context name="TLS_Context" doc:name="TLS Context" doc:id="0a71a700-87ed-4905-bdde-34bb3030cd36" >
+		<tls:key-store type="jks" path="${secure::http.listener.keystore}" keyPassword="${secure::http.listener.keystorepass}" password="${secure::http.listener.keystorepass}" />
+	</tls:context>
+	<db:config name="MySQL_Config" doc:name="Database Config" doc:id="80d4f034-5407-44e4-80eb-bc53c8803457" >
+		<db:my-sql-connection host="${secure::mdr.mysql.db.host}" port="${secure::mdr.mysql.db.port}" user="${secure::mdr.mysql.db.user}" password="${secure::mdr.mysql.db.pass}" database="${secure::mdr.mysql.db.name}" >
+			<reconnection failsDeployment="true" >
+				<reconnect />
+			</reconnection>
+			<db:pooling-profile maxPoolSize="${secure::mdr.db.poolingprofile.max.poolsize}" minPoolSize="${secure::mdr.db.poolingprofile.min.poolsize}" />
+		</db:my-sql-connection>
+	</db:config>
+
+</mule>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-itemfootprint-list-of-itemcodes-by-typeFlow" doc:id="e3a1c2ed-955a-4d73-a311-2b469ac2bb7c" >
+		<min-log:put doc:name="Put TransactionPropertie" doc:id="9c80228e-9649-4274-aeeb-6be4952027fe" key="itemtype" value="#[attributes.uriParams.itemtype]" transactionProperties="#[vars.transactionPropertie]" target="transactionProperties"/>
+		<min-log:log doc:name="Start Log" doc:id="b8b196ab-1c0a-417e-ab51-7e71362b2392" msg="Start flow to get itemcode list by type" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="Query to select itemfootprint itemcodes list by type" doc:id="bd40544f-5a01-417c-b0c9-2c0782886fd0" config-ref="mdr_database_config">
+			<db:sql >SELECT
+	ItemId
+   ,ItemNbr
+   ,Description   
+  FROM MDR.dbo.Item
+  WHERE Type  = :ItemType</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'ItemType': vars.transactionProperties.itemtype
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="39ac4051-76fd-4b0e-ba39-6890efe36746" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TotalResults": sizeOf(payload),
+	"ItemCodeList": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End Log" doc:id="4a368e44-a57f-4a59-8c6c-e0b6a311b4f4" msg="End flow to get itemcode list by type" transactionProperties="#[vars.transactionProperties]"/>
+	</flow>
+</mule>

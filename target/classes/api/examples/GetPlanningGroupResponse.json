@@ -1,0 +1,56 @@
+{
+  "Totalresults": 5,
+  "Data": [
+    {
+      "PlanningGroupId": 20,
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-05-15T03:51:43",
+      "IsActive": true,
+      "ModifiedBy": "",
+      "CommodityCode": "BLACK",
+      "PlanningGroup": "Berval Con Black",
+      "CreatedDateTime": "2020-05-15T03:51:43"
+    },
+    {
+      "PlanningGroupId": 14,
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-05-15T03:51:43",
+      "IsActive": true,
+      "ModifiedBy": "",
+      "CommodityCode": "STRAW",
+      "PlanningGroup": "Drisc LE Con Straw",
+      "CreatedDateTime": "2020-05-15T03:51:43"
+    },
+    {
+      "PlanningGroupId": 27,
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-05-15T03:51:43",
+      "IsActive": true,
+      "ModifiedBy": "",
+      "CommodityCode": "STRAW",
+      "PlanningGroup": "Drisc LE Rose Con Straw",
+      "CreatedDateTime": "2020-05-15T03:51:43"
+    },
+    {
+      "PlanningGroupId": 10,
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-05-15T03:51:43",
+      "IsActive": true,
+      "ModifiedBy": "",
+      "CommodityCode": "BLACK",
+      "PlanningGroup": "Drisc Org Black",
+      "CreatedDateTime": "2020-05-15T03:51:43"
+    },
+    {
+      "PlanningGroupId": 11,
+      "CreatedBy": "Manual",
+      "ModifiedDateTime": "2020-05-15T03:51:43",
+      "IsActive": true,
+      "ModifiedBy": "",
+      "CommodityCode": "BLUE",
+      "PlanningGroup": "Drisc Org Blue",
+      "CreatedDateTime": "2020-05-15T03:51:43"
+    }
+  ],
+  "Status": "Ok"
+}

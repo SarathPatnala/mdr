@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:min-log="http://www.mulesoft.org/schema/mule/min-log" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/min-log http://www.mulesoft.org/schema/mule/min-log/current/mule-min-log.xsd">
+	<flow name="get-currency-exchangeFlow" doc:id="2d8db5b9-8f42-4ecc-bf4b-77191ae194ef" >
+		<min-log:put doc:name="Put" doc:id="6b2d7f42-f005-4bfa-8660-d1fc8b2af3e5" key="exchangeType" value='#[if (isEmpty(attributes.queryParams.exchangetype)) "empty exchangetype" else upper(attributes.queryParams.exchangetype)]' target="transactionProperties" transactionProperties="#[vars.transactionProperties]"/>
+		<min-log:log doc:name="Start: Logger" doc:id="9145d1c7-689f-4b8a-bbac-726cc846f2a1" msg="Start: Get-currency-exchangeFlow" transactionProperties="#[vars.transactionProperties]"/>
+		<db:select doc:name="AllCurrentForexCurrencyRate" doc:id="8eae40ff-fb0f-4447-b7f9-61a50f4d749e" config-ref="mdr_database_config">
+			<db:sql>#[&quot;SELECT [ExchangeSymbol]
+      ,[RateDate]
+      ,[FromSymbol]
+      ,[ToSymbol]
+      ,[ExchangeRate]
+      ,[ExchangeRateText]
+      ,[DriscollsRate]
+      ,[PullDate]
+	  ,[CreatedDateTime]
+		,[RateDelay]
+		,[ExchangeSource]
+		,[PullType]
+		,[LastResult]
+		,[LastResultMessage]
+  FROM [MDR].[dbo].[AllCurrentForexCurrencyRate]&quot; ++
+  (if((attributes.queryParams.exchangetype) != null)
+    &quot; WHERE ExchangeSymbol = :exchangetype&quot; 
+    else &quot;&quot; )]</db:sql>
+			<db:input-parameters><![CDATA[#[exchangetype : attributes.queryParams.exchangetype]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="072470f5-8f9f-4226-89d6-f00383a4fe52">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if (sizeOf(payload)==0)
+	{Message: "No exchange rates found| " ++ (vars.transactionProperties.exchangeType default "")}	
+else
+{
+TotalResults: sizeOf(payload),
+Data: payload map((item,index)->{
+	 ExchangeRate: item.ExchangeRate, 
+	 DriscollsRate: item.DriscollsRate,
+	 ExchangeRateText: item.ExchangeRateText, 
+	 ExchangeSymbol: item.ExchangeSymbol,
+	 FromSymbol: item.FromSymbol,
+	 ToSymbol: item.ToSymbol,
+	 PullDate: item.PullDate,
+	 RateDate: item.RateDate,
+	 CreatedDateTime: item.CreatedDateTime,
+	 RateDelay: item.RateDelay,
+	 ExchangeSource: item.ExchangeSource,
+	 PullType: item.PullType,
+	 LastResult: item.LastResult,
+	 LastResultMessage: item.LastResultMessage
+}),
+Status: "OK"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<min-log:log doc:name="End: Logger" doc:id="0c0bb1bd-eda0-491d-9d01-2b4397d6b801" transactionProperties="#[vars.transactionProperties]" msg="End: Get-currency-exchangeFlow"/>
+	</flow>
+</mule>
